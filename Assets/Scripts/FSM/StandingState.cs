@@ -9,7 +9,8 @@ public class StandingState: State
     bool grounded;
     bool sprint;
     float playerSpeed;
-   
+    bool drawWeapon;
+ 
     Vector3 cVelocity;
  
     public StandingState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
@@ -25,6 +26,7 @@ public class StandingState: State
         jump = false;
         crouch = false;
         sprint = false;
+        drawWeapon = false;
         input = Vector2.zero;
         
         currentVelocity = Vector3.zero;
@@ -53,6 +55,10 @@ public class StandingState: State
             sprint = true;
         }
  
+        if (drawWeaponAction.triggered)
+        {
+            drawWeapon = true;
+        }
  
         input = moveAction.ReadValue<Vector2>();
         velocity = new Vector3(input.x, 0, input.y);
@@ -80,7 +86,11 @@ public class StandingState: State
         {
             stateMachine.ChangeState(character.crouching);
         }
-        
+        if (drawWeapon)
+        {
+            stateMachine.ChangeState(character.combatting);
+            character.animator.SetTrigger("drawWeapon");
+        }
     }
  
     public override void PhysicsUpdate()
