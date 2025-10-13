@@ -48,6 +48,9 @@ public class Character : MonoBehaviour
     
     [HideInInspector]
     public Vector3 playerVelocity;
+
+    [HideInInspector]
+    public Transform cameraTransform;
  
  
     
@@ -56,6 +59,7 @@ public class Character : MonoBehaviour
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
         playerInput = GetComponent<PlayerInput>();
+        cameraTransform = Camera.main.transform;
  
         movementSM = new StateMachine();
         standing = new StandingState(this, movementSM);
