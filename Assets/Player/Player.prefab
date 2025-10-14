@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5085490817370056659}
   - component: {fileID: 2614637785640688946}
+  - component: {fileID: 3342010820947251167}
   - component: {fileID: 7112519432576874951}
   - component: {fileID: 8493906104727096547}
   - component: {fileID: 3087644473962156057}
@@ -64,8 +65,24 @@ MonoBehaviour:
   normalColliderHeight: 0
   controller: {fileID: 0}
   playerInput: {fileID: 0}
+  cameraTransform: {fileID: 0}
   animator: {fileID: 0}
   playerVelocity: {x: 0, y: 0, z: 0}
+--- !u!114 &3342010820947251167
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 95156211748222840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de0292f013f20436cad78529ce897ca0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EquipmentSystem
+  weaponHolder: {fileID: 5615143860517193899}
+  weapon: {fileID: 1884135132866294172, guid: 100cce22f3fe04c86807b26079f6f103, type: 3}
+  weaponSheath: {fileID: 4371048468060635330}
 --- !u!143 &7112519432576874951
 CharacterController:
   m_ObjectHideFlags: 0
