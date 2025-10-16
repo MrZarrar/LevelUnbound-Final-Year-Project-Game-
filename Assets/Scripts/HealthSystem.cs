@@ -5,6 +5,8 @@ using UnityEngine;
 public class HealthSystem : MonoBehaviour
 {
     [SerializeField] float health = 100;
+
+    [SerializeField] GameObject hitVFX;
  
     Animator animator;
     void Start()
@@ -29,4 +31,9 @@ public class HealthSystem : MonoBehaviour
         Destroy(this.gameObject);
     }
     
+    public void HitVFX(Vector3 hitPoint)
+    {
+        Instantiate(hitVFX, hitPoint, Quaternion.identity);
+        Destroy(hitVFX, 1f);
+    }
 } 
