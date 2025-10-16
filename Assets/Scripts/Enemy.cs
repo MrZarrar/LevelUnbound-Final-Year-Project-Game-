@@ -6,6 +6,7 @@ using UnityEngine.AI;
 public class Enemy : MonoBehaviour
 {
     [SerializeField] float health = 3;
+    [SerializeField] GameObject hitVFX;
 
     [Header("Combat")]
     [SerializeField] float attackCD = 2f;
@@ -60,11 +61,11 @@ public class Enemy : MonoBehaviour
             print(true);
             player = collision.gameObject;
         }
-    }
+    } 
 
-    void Die()
+	void Die()
     {
-        Destroy(gameObject);
+        Destroy(this.gameObject);
     }
 
     public void TakeDamage(float damageAmount)
@@ -77,17 +78,20 @@ public class Enemy : MonoBehaviour
             Die();
         }
     }
-
-    public void StartDealDamage()
+     public void StartDealDamage()
     {
         GetComponentInChildren<EnemyDamageDealer>().StartDealDamage();
     }
-
     public void EndDealDamage()
     {
         GetComponentInChildren<EnemyDamageDealer>().EndDealDamage();
     }
 
+    public void HitVFX(Vector3 hitPosition)
+    {
+        GameObject hit = Instantiate(hitVFX, hitPosition, Quaternion.identity);
+        Destroy(hit, 3f);
+    }  
 
     private void OnDrawGizmos()
     {
