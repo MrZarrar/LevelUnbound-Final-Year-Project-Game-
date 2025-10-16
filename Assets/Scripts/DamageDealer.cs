@@ -8,7 +8,9 @@ public class DamageDealer : MonoBehaviour
 
     [SerializeField] float weaponLength;
     [SerializeField] float weaponDamage;
+    [SerializeField] GameObject slashVFX;
 
+    [SerializeField] float vfxDuration = 0.5f; // duration of the slash effect
 
     void Start()
     {
@@ -21,13 +23,14 @@ public class DamageDealer : MonoBehaviour
         if (canDealDamage)
         {
             RaycastHit hit;
-            int layerMask = 1 << 9;
+            int layerMask = 1 << 9; // Player layer
 
             if (Physics.Raycast(transform.position, -transform.up, out hit, weaponLength, layerMask))
             {
                 if (hit.transform.TryGetComponent(out Enemy enemy) && !hasDealtDamage.Contains(hit.transform.gameObject))
                 {
                     enemy.TakeDamage(weaponDamage);
+                    enemy.HitVFX(hit.point);
                     hasDealtDamage.Add(hit.transform.gameObject);
                 }
             }
@@ -39,7 +42,17 @@ public class DamageDealer : MonoBehaviour
         canDealDamage = true;
         hasDealtDamage.Clear();
 
+        if (slashVFX != null)
+        {
+            // Spawn VFX at sword tip
+            GameObject vfx = Instantiate(slashVFX, transform.position, transform.rotation);
+            vfx.transform.SetParent(transform); // parent to sword so it follows the swing
+            vfx.transform.localPosition = Vector3.zero; // aligns with sword tip
+  
 
+
+            Destroy(vfx, vfxDuration); // remove after duration
+        }
     }
 
     public void EndDealDamage()
@@ -49,7 +62,7 @@ public class DamageDealer : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.purple;
+        Gizmos.color = Color.yellow;
         Gizmos.DrawLine(transform.position, transform.position - transform.up * weaponLength);
     }
 }
