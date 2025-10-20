@@ -8,6 +8,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] float health = 3;
     [SerializeField] GameObject hitVFX;
 
+    [SerializeField] GameObject ragdoll;
+
+
     [Header("Combat")]
     [SerializeField] float attackCD = 2f;
     [SerializeField] float attackRange = 1.5f;
@@ -65,7 +68,11 @@ public class Enemy : MonoBehaviour
 
 	void Die()
     {
+
+        GameObject ragdollInstance = Instantiate(ragdoll, transform.position, transform.rotation);
+
         Destroy(this.gameObject);
+
     }
 
     public void TakeDamage(float damageAmount)
