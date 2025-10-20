@@ -7,6 +7,7 @@ public class HealthSystem : MonoBehaviour
     [SerializeField] float health = 100;
 
     [SerializeField] GameObject hitVFX;
+    [SerializeField] GameObject ragdoll;
  
     Animator animator;
     void Start()
@@ -28,6 +29,8 @@ public class HealthSystem : MonoBehaviour
 
     void Die()
     {
+
+        Instantiate(ragdoll, transform.position, transform.rotation);
         Destroy(this.gameObject);
     }
     
