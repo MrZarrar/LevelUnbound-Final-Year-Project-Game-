@@ -73,6 +73,7 @@ public class Enemy : MonoBehaviour
 
         Destroy(this.gameObject);
 
+        Destroy(ragdollInstance, 10f);
     }
 
     public void TakeDamage(float damageAmount)
