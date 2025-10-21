@@ -81,3 +81,15 @@
 - Vice versa for player
 - Slash VFX was spawning but was not visible - went into scene view and focused on the newly created vfx object during an attack and saw that it was spawning under the map at a fixed location
 - Parented the sword for the affect and setting its position to instantiate a the tip of the sword.
+
+---
+
+### 📅 20/10/25 
+- Added Player and Enemy ragdolls to be instantiated upon death
+- Started by duplicating the skelly to add a ragdoll component 
+- In doing so I have a seperate skelly ragdoll prefab, which I can instantiate when the real skelly dies and disappears
+- Issue: skelly would not die and a lot of ragdolls would start spawning in the game hierarchy
+- This was because when I duplicated skelly to create the ragdoll, all the components (such as animator and script) got carried over - so the spawned ragdoll would just replace the dead skelly with an alive once
+- Removed all components and it was successful, however I thought that if there are alot of enemies that you kill, all the ragdolls would clutter the game and also waste resources
+- So I made it so that the ragdoll disappears after 10 seconds
+- Repeated the exact same process for the player 
