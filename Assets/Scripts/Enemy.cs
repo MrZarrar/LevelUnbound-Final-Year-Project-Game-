@@ -22,11 +22,15 @@ public class Enemy : MonoBehaviour
     float timePassed;
     float newDestinationCD = 0.5f;
 
+    public HealthBar healthBar;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>(); 
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
+
+        healthBar.SetMaxHP((int)health);
     }
 
     void Update()
@@ -79,6 +83,7 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(float damageAmount)
     {
         health -= damageAmount;
+        healthBar.SetHP((int)health);
         animator.SetTrigger("damage");
 
         if (health <= 0)
