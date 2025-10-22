@@ -93,3 +93,11 @@
 - Removed all components and it was successful, however I thought that if there are alot of enemies that you kill, all the ragdolls would clutter the game and also waste resources
 - So I made it so that the ragdoll disappears after 10 seconds
 - Repeated the exact same process for the player 
+
+---
+
+### 📅 22/10/25 
+- Discovered issues: 
+- -Due to freelook logic, the player does not ROTATE with camera, unless moving; causes difficulty in attacking as it is difficult to make the player face the enemy, especially as the enemy moves
+- -Hit VFX for player damage object does not get destroyed but just disappears as the animation stops playing - still exists in the hierarchy - causes clutter
+
