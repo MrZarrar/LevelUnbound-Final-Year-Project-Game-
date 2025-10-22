@@ -85,12 +85,19 @@ public class Enemy : MonoBehaviour
         health -= damageAmount;
         healthBar.SetHP((int)health);
         animator.SetTrigger("damage");
+        ShowHealthBar();
 
         if (health <= 0)
         {
             Die();
         }
     }
+
+    private void ShowHealthBar()
+    {
+        healthBar.gameObject.SetActive(true);
+    }
+
      public void StartDealDamage()
     {
         GetComponentInChildren<EnemyDamageDealer>().StartDealDamage();
