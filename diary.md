@@ -93,3 +93,24 @@
 - Removed all components and it was successful, however I thought that if there are alot of enemies that you kill, all the ragdolls would clutter the game and also waste resources
 - So I made it so that the ragdoll disappears after 10 seconds
 - Repeated the exact same process for the player 
+
+---
+
+
+
+### 📅 21/10/25 
+- Added a health bar as a UI canvas with image including a border, fill and heart.
+- The health bar has a slider component which is set by health.
+- When game starts the enemy's health is set to max value of slider and upon taking damage, the recalculated health is set to to the slider's normalised value
+- The healthbar starts green, then goes yellow after reaching a certain threshold, and then red when it is close to 0
+- Currently the healthbar is a 2D UI object in world space, as a child of the enemy and is placed above the head, it does not follow camera therefore looks odd from certain angles
+- The healthbar also needs to only appear after an enemy is hit, instead of always being visible.
+
+---
+
+
+### 📅 22/10/25 
+- Discovered issues: 
+- -Due to freelook logic, the player does not ROTATE with camera, unless moving; causes difficulty in attacking as it is difficult to make the player face the enemy, especially as the enemy moves
+- -Hit VFX for player damage object does not get destroyed but just disappears as the animation stops playing - still exists in the hierarchy - causes clutter
+
