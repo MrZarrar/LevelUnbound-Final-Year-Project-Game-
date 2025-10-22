@@ -116,5 +116,6 @@
 - Turned the HP bar into a billboard that always faces the camera, and instad of using Update, I am using LateUpdate so that it updates after the camera has finished moving to avoid jitter -  if the camera moves and then the enemy also moves there is jitter.
 - Looks at camera by transforming current position plus one unit towards where the camera is looking at (forward)
 - Updated Billboard to use the world main camera automatically instead of manually assigning a camera - this is because it was not scalable to assign a camera every time an enemy is added to the scene, initally i was using a pre defined main camera prefab but in doing so the health bar was not rotating to follow the camera correctly, it was stuck facing the initial positon of the main camera as it was referencing the prefab and not the real time camera
+- Set Healthbar as unactive in Unity and created a method in enemy class that shows health bar (sets it to active) - this is called after the enemy takes damage for the first time - Only show relevant health bars opposed to bars for all enemies - if there are 100 enemies it would clutter the UI
 
 
