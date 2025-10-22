@@ -2,12 +2,23 @@ using UnityEngine;
 
 public class Billboard : MonoBehaviour
 {
+    private Canvas canvas;
 
-    public Transform cam;
+    void Awake()
+    {
+        canvas = GetComponent<Canvas>();
 
-    // Update is called once per frame
+        if (canvas.worldCamera == null)
+        {
+            canvas.worldCamera = Camera.main;
+        }
+    }
+
     void LateUpdate()
     {
-        transform.LookAt(transform.position + cam.forward);
+        if (Camera.main != null)
+        {
+            transform.LookAt(transform.position + Camera.main.transform.forward);
+        }
     }
 }
