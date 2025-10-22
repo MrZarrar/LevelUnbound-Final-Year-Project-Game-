@@ -113,4 +113,6 @@
 - Discovered issues: 
 - -Due to freelook logic, the player does not ROTATE with camera, unless moving; causes difficulty in attacking as it is difficult to make the player face the enemy, especially as the enemy moves
 - -Hit VFX for player damage object does not get destroyed but just disappears as the animation stops playing - still exists in the hierarchy - causes clutter
+- Turned the HP bar into a billboard that always faces the camera, and instad of using Update, I am using LateUpdate so that it updates after the camera has finished moving to avoid jitter -  if the camera moves and then the enemy also moves there is jitter.
+- Looks at camera by transforming current position plus one unit towards where the camera is looking at (forward)
 
