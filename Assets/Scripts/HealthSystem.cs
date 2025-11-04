@@ -8,17 +8,36 @@ public class HealthSystem : MonoBehaviour
 
     [SerializeField] GameObject hitVFX;
     [SerializeField] GameObject ragdoll;
+
+    [Header("HUD")]
+    [SerializeField] HealthBar playerHealthBar; 
+
  
     Animator animator;
     void Start()
     {
         animator = GetComponent<Animator>();
+
+        if (playerHealthBar != null)
+        {
+            playerHealthBar.SetMaxHP((int)health);
+        }
+        else
+        {
+            Debug.LogWarning("Player Health Bar UI is not assigned in the Inspector!");
+        }
     }
 
     public void TakeDamage(float damageAmount)
     {
         health -= damageAmount;
         animator.SetTrigger("damage");
+
+
+        if (playerHealthBar != null)
+        {
+            playerHealthBar.SetHP((int)health);
+        }
 
 
         if (health <= 0)
@@ -29,14 +48,15 @@ public class HealthSystem : MonoBehaviour
 
     void Die()
     {
-
         Instantiate(ragdoll, transform.position, transform.rotation);
         Destroy(this.gameObject);
     }
     
     public void HitVFX(Vector3 hitPoint)
     {
-        Instantiate(hitVFX, hitPoint, Quaternion.identity);
-        Destroy(hitVFX, 1f);
+        
+        GameObject hitInstance = Instantiate(hitVFX, hitPoint, Quaternion.identity);
+        Destroy(hitInstance, 1f); 
+
     }
-} 
+}
