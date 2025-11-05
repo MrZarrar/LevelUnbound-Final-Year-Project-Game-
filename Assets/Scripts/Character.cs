@@ -10,6 +10,9 @@ public class Character : MonoBehaviour
     public float gravityMultiplier = 2;
     public float rotationSpeed = 5f;
 
+    public float staminaDrainRate = 10f;
+    public float staminaRegenRate = 5f;
+
 
 // too high of velocity damp time can cause sliding 
     [Header("Animation Smoothing")]
@@ -46,6 +49,12 @@ public class Character : MonoBehaviour
     public Animator animator;
     [HideInInspector]
     public Vector3 playerVelocity;
+
+    [HideInInspector]
+    public HealthSystem healthSystem;
+
+    [HideInInspector]
+    public PlayerStats playerStats;
  
  
     private void Start()
@@ -54,7 +63,10 @@ public class Character : MonoBehaviour
         animator = GetComponent<Animator>();
         playerInput = GetComponent<PlayerInput>();
         cameraTransform = Camera.main.transform;
- 
+
+        healthSystem = GetComponent<HealthSystem>();
+        playerStats = GetComponent<PlayerStats>();
+
         movementSM = new StateMachine();
         standing = new StandingState(this, movementSM);
         jumping = new JumpingState(this, movementSM);
@@ -64,9 +76,9 @@ public class Character : MonoBehaviour
         sprintjumping = new SprintJumpState(this, movementSM);
         combatting = new CombatState(this, movementSM);
         attacking = new AttackState(this, movementSM);
- 
+
         movementSM.Initialize(standing);
- 
+
         normalColliderHeight = controller.height;
         gravityValue *= gravityMultiplier;
     }

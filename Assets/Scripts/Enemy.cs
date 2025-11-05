@@ -68,16 +68,19 @@ public class Enemy : MonoBehaviour
             print(true);
             player = collision.gameObject;
         }
-    } 
+    }
 
-	void Die()
+    void Die()
     {
 
         GameObject ragdollInstance = Instantiate(ragdoll, transform.position, transform.rotation);
 
         Destroy(this.gameObject);
 
+        player.GetComponent<PlayerStats>().AddXP(20);
+
         Destroy(ragdollInstance, 10f);
+        
     }
 
     public void TakeDamage(float damageAmount)

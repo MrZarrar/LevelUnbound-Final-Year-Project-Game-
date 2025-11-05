@@ -66,10 +66,15 @@ public class CombatState : State
             stateMachine.ChangeState(character.standing);
         }
 
-		if (attack)
-		{
+        if (attack)
+        {
             character.animator.SetTrigger("attack");
             stateMachine.ChangeState(character.attacking);
+        }
+        
+        if (!character.healthSystem.IsStaminaFull())
+        {
+            character.healthSystem.RegenerateStamina(character.staminaRegenRate * Time.deltaTime);
         }
     }
 

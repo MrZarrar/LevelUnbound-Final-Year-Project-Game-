@@ -57,7 +57,10 @@ public class SprintState : State
  
     public override void LogicUpdate()
     {
-        if (sprint)
+
+        bool hasStamina = character.healthSystem.TryUseStamina(character.staminaDrainRate * Time.deltaTime);
+        
+        if (sprint && hasStamina)
         {
             character.animator.SetFloat("speed", input.magnitude + 0.5f, character.speedDampTime, Time.deltaTime);
         }

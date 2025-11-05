@@ -67,16 +67,27 @@ public class StandingState: State
         velocity.y = 0f;
      
     }
- 
+
     public override void LogicUpdate()
     {
         base.LogicUpdate();
- 
+
         character.animator.SetFloat("speed", input.magnitude, character.speedDampTime, Time.deltaTime);
- 
+
+        if (!character.healthSystem.IsStaminaFull())
+        {
+            character.healthSystem.RegenerateStamina(character.staminaRegenRate * Time.deltaTime);
+        }
+
         if (sprint)
         {
-            stateMachine.ChangeState(character.sprinting);
+
+            if (character.healthSystem.GetCurrentStamina() > 0)
+            { 
+                stateMachine.ChangeState(character.sprinting);
+            }
+    
+
         }    
         if (jump)
         {

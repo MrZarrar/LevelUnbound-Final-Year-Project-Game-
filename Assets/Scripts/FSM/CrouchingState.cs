@@ -69,6 +69,11 @@ public class CrouchingState : State
     {
         base.LogicUpdate();
         character.animator.SetFloat("speed", input.magnitude, character.speedDampTime, Time.deltaTime);
+
+        if (!character.healthSystem.IsStaminaFull())
+        {
+            character.healthSystem.RegenerateStamina(character.staminaRegenRate * Time.deltaTime);
+        }
     }
 
     public override void PhysicsUpdate()
