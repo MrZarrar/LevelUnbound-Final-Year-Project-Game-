@@ -6,6 +6,8 @@ using UnityEngine.AI;
 public class Enemy : MonoBehaviour
 {
     [SerializeField] float health = 3;
+
+    [SerializeField] int XPDrop = 10;
     [SerializeField] GameObject hitVFX;
 
     [SerializeField] GameObject ragdoll;
@@ -77,7 +79,7 @@ public class Enemy : MonoBehaviour
 
         Destroy(this.gameObject);
 
-        player.GetComponent<PlayerStats>().AddXP(20);
+        player.GetComponent<PlayerStats>().AddXP(XPDrop);
 
         Destroy(ragdollInstance, 10f);
         

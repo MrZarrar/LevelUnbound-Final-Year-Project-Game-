@@ -19,6 +19,7 @@ public class PlayerStats : MonoBehaviour
 {
     [Header("Core Components")]
     [SerializeField] private HealthSystem healthSystem;
+    [SerializeField] GameObject levelUpVFX;
 
     [Header("Leveling")]
 
@@ -69,6 +70,14 @@ public class PlayerStats : MonoBehaviour
     private void LevelUp()
     {
         level++;
+
+        if (levelUpVFX != null)
+        {
+            GameObject UpVFX = Instantiate(levelUpVFX, transform.position, Quaternion.identity);
+            Destroy(UpVFX, 1f);
+        }
+
+
         currentXP -= xpToNextLevel;
 
         xpToNextLevel = (int)(xpToNextLevel * 1.2f);
