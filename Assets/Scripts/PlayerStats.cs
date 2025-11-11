@@ -7,12 +7,7 @@ public class Stat
 {
     public string name; 
     public int baseValue; 
-    
-    
-    public int GetValue()
-    {
-        return baseValue;
-    }
+    public int GetValue() { return baseValue; }
 }
 
 public class PlayerStats : MonoBehaviour
@@ -21,13 +16,15 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private HealthSystem healthSystem;
     [SerializeField] GameObject levelUpVFX;
 
-    [Header("Leveling")]
+    private DamageDealer playerWeapon;
+    private Animator animator;
 
+    [Header("Leveling")]
     [SerializeField] private XPBar xpBar;
     public int level = 1;
     public int currentXP = 0;
     public int xpToNextLevel = 100;
-    
+
     [Header("Primary Stats")]
     public Stat strength;
     public Stat agility;
@@ -36,30 +33,23 @@ public class PlayerStats : MonoBehaviour
 
     void Awake()
     {
+        if (healthSystem == null) healthSystem = GetComponent<HealthSystem>();
 
-        if (healthSystem == null)
-        {
-            healthSystem = GetComponent<HealthSystem>();
-        }
+        animator = GetComponent<Animator>();
 
-        UpdateAllStats();
-        
+
+        UpdateVitals();
+
         if (xpBar != null)
         {
             xpBar.SetLevel(level, currentXP, xpToNextLevel);
         }
     }
 
-    // enemies call this when defeated
     public void AddXP(int xpAmount)
     {
         currentXP += xpAmount;
-
-        if (xpBar != null)
-        {
-            xpBar.SetXP(currentXP);
-        }
-
+        if (xpBar != null) xpBar.SetXP(currentXP);
 
         if (currentXP >= xpToNextLevel)
         {
@@ -70,25 +60,23 @@ public class PlayerStats : MonoBehaviour
     private void LevelUp()
     {
         level++;
-
         if (levelUpVFX != null)
         {
             GameObject UpVFX = Instantiate(levelUpVFX, transform.position, Quaternion.identity);
             Destroy(UpVFX, 1f);
         }
-
-
         currentXP -= xpToNextLevel;
-
         xpToNextLevel = (int)(xpToNextLevel * 1.2f);
 
+        // Increase stats
         strength.baseValue++;
         agility.baseValue++;
         intelligence.baseValue++;
         vitality.baseValue++;
 
+
         UpdateAllStats();
-        
+
         if (xpBar != null)
         {
             xpBar.SetLevel(level, currentXP, xpToNextLevel);
@@ -97,18 +85,49 @@ public class PlayerStats : MonoBehaviour
 
     private void UpdateAllStats()
     {
+        UpdateVitals();
+        UpdateWeaponStats();
+    }
 
-        float newMaxHealth = vitality.GetValue() * 15; 
-        
+
+    private void UpdateVitals()
+    {
+        float newMaxHealth = vitality.GetValue() * 15;
         float newMaxMana = intelligence.GetValue() * 10;
-        
         float newMaxStamina = agility.GetValue() * 10;
-        
+
         if (healthSystem != null)
         {
             healthSystem.InitializeVitals(newMaxHealth, newMaxMana, newMaxStamina);
         }
-
     }
-    
+
+    private void UpdateWeaponStats()
+    {
+        // Check if a weapon is actually equipped
+        if (playerWeapon == null)
+        {
+            if (animator != null) animator.SetFloat("AttackSpeed", 1f);
+            return;
+        }
+
+        // Update Weapon Damage
+        float strengthBonus = strength.GetValue() * 1.2f;
+        playerWeapon.UpdateDamage(strengthBonus);
+
+        // Update Swing Speed
+        if (animator != null)
+        {
+            float agilityBonus = agility.GetValue() * 0.05f;
+            float totalSwingSpeed = playerWeapon.GetBaseSwingSpeed() + agilityBonus;
+            animator.SetFloat("AttackSpeed", totalSwingSpeed);
+        }
+    }
+
+    public void SetActiveWeapon(DamageDealer newWeapon)
+    {
+        playerWeapon = newWeapon;
+        UpdateWeaponStats();
+    }
 }
+
