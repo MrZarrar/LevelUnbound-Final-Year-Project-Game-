@@ -1,68 +1,74 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class DamageDealer : MonoBehaviour
 {
-    bool canDealDamage;
-    List<GameObject> hasDealtDamage;
+    [Header("Weapon Stats")]
+    [SerializeField] private float baseWeaponDamage = 10f;
+    [SerializeField] private float baseSwingSpeed = 1.0f; // 1.0 = 100% speed
+    
+    [Header("VFX")]
+    [SerializeField] private GameObject slashVFX;
+    [SerializeField] private float vfxDuration = 0.5f;
 
-    [SerializeField] float weaponLength;
-    [SerializeField] float weaponDamage;
-    [SerializeField] GameObject slashVFX;
-
-    [SerializeField] float vfxDuration = 0.5f; // duration of the slash effect
+    private Collider hitboxCollider;
+    private List<Collider> collidersAlreadyHit = new List<Collider>();
+    
+    private float totalDamage;
 
     void Start()
     {
-        canDealDamage = false;
-        hasDealtDamage = new List<GameObject>();
-    }
-
-    void Update()
-    {
-        if (canDealDamage)
-        {
-            RaycastHit hit;
-            int layerMask = 1 << 9; // Player layer
-
-            if (Physics.Raycast(transform.position, -transform.up, out hit, weaponLength, layerMask))
-            {
-                if (hit.transform.TryGetComponent(out Enemy enemy) && !hasDealtDamage.Contains(hit.transform.gameObject))
-                {
-                    enemy.TakeDamage(weaponDamage);
-                    enemy.HitVFX(hit.point);
-                    hasDealtDamage.Add(hit.transform.gameObject);
-                }
-            }
-        }
+        hitboxCollider = GetComponent<Collider>();
+        hitboxCollider.isTrigger = true;
+        hitboxCollider.enabled = false;
+        
+        // Set initial damage on start
+        UpdateDamage(0); 
     }
 
     public void StartDealDamage()
     {
-        canDealDamage = true;
-        hasDealtDamage.Clear();
+        collidersAlreadyHit.Clear();
+        hitboxCollider.enabled = true;
 
         if (slashVFX != null)
         {
-            // Spawn VFX at sword tip
             GameObject vfx = Instantiate(slashVFX, transform.position, transform.rotation);
-            vfx.transform.SetParent(transform); // parent to sword so it follows the swing
-            vfx.transform.localPosition = Vector3.zero; // aligns with sword tip
-  
-
-
-            Destroy(vfx, vfxDuration); // remove after duration
+            vfx.transform.SetParent(transform); 
+            vfx.transform.localPosition = Vector3.zero; 
+            Destroy(vfx, vfxDuration); 
         }
     }
 
     public void EndDealDamage()
     {
-        canDealDamage = false;
+        hitboxCollider.enabled = false;
     }
 
-    private void OnDrawGizmos()
+    private void OnTriggerEnter(Collider other)
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(transform.position, transform.position - transform.up * weaponLength);
+        if (other.CompareTag("Enemy") && !collidersAlreadyHit.Contains(other))
+        {
+            collidersAlreadyHit.Add(other);
+            
+            if (other.TryGetComponent(out Enemy enemy))
+            {
+                Vector3 hitPoint = other.ClosestPoint(transform.position);
+                
+                enemy.TakeDamage(totalDamage);
+                enemy.HitVFX(hitPoint);
+            }
+        }
+    }
+
+    public void UpdateDamage(float strengthBonus)
+    {
+        totalDamage = baseWeaponDamage + strengthBonus;
+    }
+
+    public float GetBaseSwingSpeed()
+    {
+        return baseSwingSpeed;
     }
 }
