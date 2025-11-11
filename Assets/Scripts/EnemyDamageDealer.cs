@@ -1,65 +1,64 @@
 using UnityEngine;
+using System.Collections.Generic;
 
+[RequireComponent(typeof(Collider))]
 public class EnemyDamageDealer : MonoBehaviour
 {
-    bool canDealDamage;
-    bool hasDealtDamage;
+    private float weaponDamage = 1f;
+    private Collider hitboxCollider;
 
-    [SerializeField] float weaponLength = 1.03f;
-    [SerializeField] float weaponDamage = 1f;
-    [SerializeField] float sweepRadius = 0.1f; 
-
-    private Vector3 lastPosition;
+  
+    private List<Collider> collidersAlreadyHit = new List<Collider>();
 
     void Start()
     {
-        canDealDamage = false;
-        hasDealtDamage = false;
-        lastPosition = transform.position;
-    }
-
-    void FixedUpdate()
-    {
-
-        Debug.DrawRay(transform.position, transform.up * weaponLength, Color.red); // show raycast to see if it is aligned with sword in scene iew
-
-        if (canDealDamage && !hasDealtDamage)
-        {
-            int layerMask = 1 << 8; 
-            Vector3 direction = (transform.position - lastPosition).normalized;
-            float distance = Vector3.Distance(transform.position, lastPosition);
-
-          
-            if (Physics.SphereCast(lastPosition, sweepRadius, direction, out RaycastHit hit, distance + weaponLength, layerMask)) //sweep ray along with the sword's motion
-            {
-                if (hit.transform.TryGetComponent(out HealthSystem health))
-                {
-                    health.TakeDamage(weaponDamage);
-                    health.HitVFX(hit.point);
-                    Debug.Log($"Enemy dealt {weaponDamage} damage to {hit.transform.name}");
-                    hasDealtDamage = true;
-                }
-            }
-        }
-
-        lastPosition = transform.position;
+        // Get the collider on this object
+        hitboxCollider = GetComponent<Collider>();
+        
+        hitboxCollider.isTrigger = true;
+        
+        hitboxCollider.enabled = false;
     }
 
     public void StartDealDamage()
     {
-        canDealDamage = true;
-        hasDealtDamage = false;
-        lastPosition = transform.position;
+        collidersAlreadyHit.Clear();
+        
+        hitboxCollider.enabled = true;
     }
 
     public void EndDealDamage()
     {
-        canDealDamage = false;
+      
+        hitboxCollider.enabled = false;
     }
 
-    private void OnDrawGizmos()
+    private void OnTriggerEnter(Collider other)
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(transform.position, transform.position + transform.up * weaponLength);
+        if (other.CompareTag("Player"))
+        {
+            // Check if alrdy hit player
+            if (collidersAlreadyHit.Contains(other))
+            {
+                return; 
+            }
+
+            collidersAlreadyHit.Add(other);
+
+            if (other.TryGetComponent(out HealthSystem health))
+            {
+                // Find the closest point on the player's collider for the VFX
+                Vector3 hitPoint = other.ClosestPoint(transform.position);
+
+                health.TakeDamage(weaponDamage);
+                health.HitVFX(hitPoint);
+                Debug.Log($"Enemy dealt {weaponDamage} damage to {other.name}");
+            }
+        }
+    }
+
+    public void SetDamage(float damage)
+    {
+        weaponDamage = damage;
     }
 }
