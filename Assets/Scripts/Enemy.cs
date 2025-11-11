@@ -2,21 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using System;
 
 public class Enemy : MonoBehaviour
 {
-    [SerializeField] float health = 3;
+    [SerializeField] private EnemyData enemyData;
 
-    [SerializeField] int XPDrop = 10;
     [SerializeField] GameObject hitVFX;
 
     [SerializeField] GameObject ragdoll;
 
+    [SerializeField] HealthBar healthBar;
 
-    [Header("Combat")]
-    [SerializeField] float attackCD = 2f;
-    [SerializeField] float attackRange = 1.5f;
-    [SerializeField] float aggroRange = 4f;
+    [SerializeField] private EnemyDamageDealer leftHandDealer;
+    [SerializeField] private EnemyDamageDealer rightHandDealer;
+
+
+    private float attackCD;
+    private int XPDrop;
+    private float attackRange;
+    private float aggroRange;
+    private float health;
+
+    public static event Action OnEnemyDied;
 
     GameObject player;
     NavMeshAgent agent; 
@@ -24,13 +32,26 @@ public class Enemy : MonoBehaviour
     float timePassed;
     float newDestinationCD = 0.5f;
 
-    public HealthBar healthBar;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>(); 
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
+
+        health = enemyData.health;
+        attackCD = enemyData.attackCD;
+        attackRange = enemyData.attackRange;
+        aggroRange = enemyData.aggroRange;
+        agent.speed = enemyData.agentSpeed;
+
+        EnemyDamageDealer[] allDealers = GetComponentsInChildren<EnemyDamageDealer>();
+
+        foreach (EnemyDamageDealer dealer in allDealers)
+        {
+            dealer.SetDamage(enemyData.weaponDamage);
+        }
+
 
         healthBar.SetMaxHP((int)health);
     }
@@ -39,10 +60,15 @@ public class Enemy : MonoBehaviour
     {
         animator.SetFloat("speed", agent.velocity.magnitude / agent.speed);
 
- 		if (player == null)
-		{
+        if (player == null)
+        {
             return;
-		} 
+        }
+
+        HandleMeleeAI();
+    }
+
+    private void HandleMeleeAI(){
 
         if (timePassed >= attackCD)
         {
@@ -75,6 +101,8 @@ public class Enemy : MonoBehaviour
     void Die()
     {
 
+        OnEnemyDied?.Invoke();
+
         GameObject ragdollInstance = Instantiate(ragdoll, transform.position, transform.rotation);
 
         Destroy(this.gameObject);
@@ -103,15 +131,30 @@ public class Enemy : MonoBehaviour
         healthBar.gameObject.SetActive(true);
     }
 
-     public void StartDealDamage()
+     public void StartLeftHandDamage()
     {
-        GetComponentInChildren<EnemyDamageDealer>().StartDealDamage();
-    }
-    public void EndDealDamage()
-    {
-        GetComponentInChildren<EnemyDamageDealer>().EndDealDamage();
+        if (leftHandDealer != null)
+            leftHandDealer.StartDealDamage();
     }
 
+    public void EndLeftHandDamage()
+    {
+        if (leftHandDealer != null)
+            leftHandDealer.EndDealDamage();
+    }
+
+    public void StartRightHandDamage()
+    {
+        if (rightHandDealer != null)
+            rightHandDealer.StartDealDamage();
+    }
+
+    public void EndRightHandDamage()
+    {
+        if (rightHandDealer != null)
+            rightHandDealer.EndDealDamage();
+    }
+    
     public void HitVFX(Vector3 hitPosition)
     {
         GameObject hit = Instantiate(hitVFX, hitPosition, Quaternion.identity);
