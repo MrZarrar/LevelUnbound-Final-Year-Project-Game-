@@ -44,6 +44,7 @@ public class Enemy : MonoBehaviour
         attackRange = enemyData.attackRange;
         aggroRange = enemyData.aggroRange;
         agent.speed = enemyData.agentSpeed;
+        XPDrop = enemyData.XPDrop;
 
         EnemyDamageDealer[] allDealers = GetComponentsInChildren<EnemyDamageDealer>();
 
@@ -154,7 +155,7 @@ public class Enemy : MonoBehaviour
         if (rightHandDealer != null)
             rightHandDealer.EndDealDamage();
     }
-    
+
     public void HitVFX(Vector3 hitPosition)
     {
         GameObject hit = Instantiate(hitVFX, hitPosition, Quaternion.identity);

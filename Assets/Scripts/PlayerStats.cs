@@ -112,13 +112,13 @@ public class PlayerStats : MonoBehaviour
         }
 
         // Update Weapon Damage
-        float strengthBonus = strength.GetValue() * 1.2f;
+        float strengthBonus = 1.0f + (strength.GetValue() * 0.1f);
         playerWeapon.UpdateDamage(strengthBonus);
 
         // Update Swing Speed
         if (animator != null)
         {
-            float agilityBonus = agility.GetValue() * 0.05f;
+            float agilityBonus = agility.GetValue() * 0.01f;
             float totalSwingSpeed = playerWeapon.GetBaseSwingSpeed() + agilityBonus;
             animator.SetFloat("AttackSpeed", totalSwingSpeed);
         }

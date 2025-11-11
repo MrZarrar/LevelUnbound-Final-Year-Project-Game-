@@ -23,8 +23,6 @@ public class DamageDealer : MonoBehaviour
         hitboxCollider.isTrigger = true;
         hitboxCollider.enabled = false;
         
-        // Set initial damage on start
-        UpdateDamage(0); 
     }
 
     public void StartDealDamage()
@@ -51,20 +49,32 @@ public class DamageDealer : MonoBehaviour
         if (other.CompareTag("Enemy") && !collidersAlreadyHit.Contains(other))
         {
             collidersAlreadyHit.Add(other);
-            
+
             if (other.TryGetComponent(out Enemy enemy))
             {
                 Vector3 hitPoint = other.ClosestPoint(transform.position);
-                
+
                 enemy.TakeDamage(totalDamage);
                 enemy.HitVFX(hitPoint);
+                
+                Debug.Log($"Player dealt {totalDamage} damage to {other.name}");
             }
         }
     }
 
     public void UpdateDamage(float strengthBonus)
     {
-        totalDamage = baseWeaponDamage + strengthBonus;
+
+        if (strengthBonus < 0f)
+        {
+            totalDamage = baseWeaponDamage * strengthBonus;
+        }
+        else
+        {
+            totalDamage = baseWeaponDamage + strengthBonus;
+        }
+
+        Debug.Log($"DamageDealer total damage updated to {totalDamage}");
     }
 
     public float GetBaseSwingSpeed()

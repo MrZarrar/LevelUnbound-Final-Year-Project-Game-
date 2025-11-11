@@ -4,6 +4,8 @@ public class AttackState : State
     float timePassed;
     float clipLength;
     float clipSpeed;
+
+    float clipDuration;
     bool attack;
     public AttackState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
     {
@@ -20,6 +22,8 @@ public class AttackState : State
         timePassed = 0f;
         character.animator.SetTrigger("attack");
         character.animator.SetFloat("speed", 0f);
+
+        clipDuration = float.MaxValue;
     }
 
     public override void HandleInput()
@@ -36,20 +40,34 @@ public class AttackState : State
         base.LogicUpdate();
 
         timePassed += Time.deltaTime;
-        clipLength = character.animator.GetCurrentAnimatorClipInfo(1)[0].clip.length;
-        clipSpeed = character.animator.GetCurrentAnimatorStateInfo(1).speed;
 
-        if (timePassed >= clipLength / clipSpeed && attack)
+
+        AnimatorClipInfo[] clipInfo = character.animator.GetCurrentAnimatorClipInfo(1);
+
+        if (clipInfo.Length > 0)
+        {
+            AnimatorStateInfo stateInfo = character.animator.GetCurrentAnimatorStateInfo(1);
+
+            clipLength = clipInfo[0].clip.length;
+
+            clipSpeed = stateInfo.speed;
+
+            clipDuration = clipLength / clipSpeed;
+        }
+
+
+        if (timePassed >= clipDuration && attack)
         {
             stateMachine.ChangeState(character.attacking);
         }
-        if (timePassed >= clipLength / clipSpeed)
+        if (timePassed >= clipDuration)
         {
             stateMachine.ChangeState(character.combatting);
             character.animator.SetTrigger("move");
         }
 
     }
+
     public override void Exit()
     {
         base.Exit();
