@@ -17,12 +17,14 @@ public class State
     public InputAction sprintAction;
     public InputAction drawWeaponAction;
     public InputAction attackAction;
- 
+    public InputAction rangedAttackAction;
+
+
     public State(Character _character, StateMachine _stateMachine)
     {
         character = _character;
         stateMachine = _stateMachine;
- 
+
         moveAction = character.playerInput.actions["Move"];
         lookAction = character.playerInput.actions["Look"];
         jumpAction = character.playerInput.actions["Jump"];
@@ -30,7 +32,8 @@ public class State
         sprintAction = character.playerInput.actions["Sprint"];
         drawWeaponAction = character.playerInput.actions["DrawWeapon"];
         attackAction = character.playerInput.actions["Attack"];
- 
+        rangedAttackAction = character.playerInput.actions["RangedAttack"];
+
     }
  
     public virtual void Enter()

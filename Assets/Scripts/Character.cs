@@ -34,6 +34,8 @@ public class Character : MonoBehaviour
     public SprintJumpState sprintjumping;
     public CombatState combatting;
     public AttackState attacking;
+
+    public CastingState casting;
  
     [HideInInspector]
     public float gravityValue = -9.81f;
@@ -76,6 +78,7 @@ public class Character : MonoBehaviour
         sprintjumping = new SprintJumpState(this, movementSM);
         combatting = new CombatState(this, movementSM);
         attacking = new AttackState(this, movementSM);
+        casting = new CastingState(this, movementSM);
 
         movementSM.Initialize(standing);
 
