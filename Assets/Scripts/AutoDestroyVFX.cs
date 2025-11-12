@@ -12,7 +12,6 @@ public class AutoDestroyVFX : MonoBehaviour
 
     void Update()
     {
-        // When the particle system stops playing, destroy it
         if (ps != null && !ps.IsAlive())
         {
             Destroy(gameObject);
