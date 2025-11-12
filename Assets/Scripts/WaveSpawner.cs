@@ -23,6 +23,9 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private TextMeshProUGUI enemiesLeftText;
     [SerializeField] private TextMeshProUGUI waveCounterText;
 
+    [SerializeField] private TextMeshProUGUI waveAnnouncementText;
+    [SerializeField] private float announcementDuration = 2.5f;
+
     private int currentWaveIndex = 0;
     private int enemiesLeftInWave;
     private bool bossHasSpawned = false;
@@ -59,6 +62,9 @@ public class WaveSpawner : MonoBehaviour
 
         Wave currentWave = waves[waveIndex];
         enemiesLeftInWave = currentWave.spawnCount;
+
+        StartCoroutine(ShowWaveAnnouncement("Wave " + (currentWaveIndex + 1)));
+
         UpdateUI();
 
         StartCoroutine(SpawnWaveRoutine(currentWave));
@@ -86,15 +92,27 @@ public class WaveSpawner : MonoBehaviour
 
         Transform spawnPoint = bossSpawnPoint != null ? bossSpawnPoint : spawnPoints[Random.Range(0, spawnPoints.Length)];
         Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation);
+        
+        StartCoroutine(ShowWaveAnnouncement("!! BOSS FIGHT !!"));
 
         if (minionPrefab != null && minionCount > 0)
         {
-            enemiesLeftInWave += minionCount; 
-            
+            enemiesLeftInWave += minionCount;
+
             StartCoroutine(SpawnMinionsRoutine());
         }
         
         UpdateUIForBossWave();
+    }
+
+    private IEnumerator ShowWaveAnnouncement(string message)
+    {
+        waveAnnouncementText.text = message;
+        waveAnnouncementText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(announcementDuration);
+
+        waveAnnouncementText.gameObject.SetActive(false);
     }
 
 
@@ -119,7 +137,8 @@ public class WaveSpawner : MonoBehaviour
             if (enemiesLeftInWave <= 0)
             {
                 Debug.Log("BOSS DEFEATED! YOU WIN!");
-                enemiesLeftText.text = "YOU WIN!";
+                enemiesLeftText.text = "";
+                WaveAnnouncement_Text = "YOU WIN!";
                 waveCounterText.text = "";
                 // TODO: Add game win logic 
             }
