@@ -43,6 +43,11 @@ public class Enemy : MonoBehaviour
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
 
+        if (enemyData.spawnVFX != null)
+    {
+        Instantiate(enemyData.spawnVFX, transform.position, transform.rotation);
+    }
+
         health = enemyData.health;
         attackCD = enemyData.attackCD;
         attackRange = enemyData.attackRange;
@@ -210,7 +215,6 @@ public class Enemy : MonoBehaviour
     public void HitVFX(Vector3 hitPosition)
     {
         GameObject hit = Instantiate(hitVFX, hitPosition, Quaternion.identity);
-        Destroy(hit, 3f);
     }  
 
     private void OnDrawGizmos()

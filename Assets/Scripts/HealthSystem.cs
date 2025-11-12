@@ -104,6 +104,5 @@ public class HealthSystem : MonoBehaviour
     public void HitVFX(Vector3 hitPoint)
     {
         GameObject hitInstance = Instantiate(hitVFX, hitPoint, Quaternion.identity);
-        Destroy(hitInstance, 1f);
     }
 }

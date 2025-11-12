@@ -63,7 +63,6 @@ public class PlayerStats : MonoBehaviour
         if (levelUpVFX != null)
         {
             GameObject UpVFX = Instantiate(levelUpVFX, transform.position, Quaternion.identity);
-            Destroy(UpVFX, 1f);
         }
         currentXP -= xpToNextLevel;
         xpToNextLevel = (int)(xpToNextLevel * 1.2f);
