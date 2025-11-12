@@ -11,6 +11,8 @@ public class EnemyData : ScriptableObject
 
     public float agentSpeed = 3.5f;
 
+    public float patrolSpeed = 2f;
+
     public float attackCD = 2f;
 
     public float attackRange = 1.5f;

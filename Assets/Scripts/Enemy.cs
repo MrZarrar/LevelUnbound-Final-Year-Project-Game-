@@ -17,6 +17,11 @@ public class Enemy : MonoBehaviour
     [SerializeField] private EnemyDamageDealer leftHandDealer;
     [SerializeField] private EnemyDamageDealer rightHandDealer;
 
+    private enum EnemyState { Patrolling, Chasing }
+    private EnemyState currentState;
+
+    [SerializeField] private float patrolRadius = 20f;
+
 
     private float attackCD;
     private int XPDrop;
@@ -30,12 +35,11 @@ public class Enemy : MonoBehaviour
     NavMeshAgent agent; 
     Animator animator;
     float timePassed;
-    float newDestinationCD = 0.5f;
 
 
     void Start()
     {
-        agent = GetComponent<NavMeshAgent>(); 
+        agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
 
@@ -43,7 +47,7 @@ public class Enemy : MonoBehaviour
         attackCD = enemyData.attackCD;
         attackRange = enemyData.attackRange;
         aggroRange = enemyData.aggroRange;
-        agent.speed = enemyData.agentSpeed;
+
         XPDrop = enemyData.XPDrop;
 
         EnemyDamageDealer[] allDealers = GetComponentsInChildren<EnemyDamageDealer>();
@@ -55,6 +59,11 @@ public class Enemy : MonoBehaviour
 
 
         healthBar.SetMaxHP((int)health);
+
+        currentState = EnemyState.Patrolling;
+        agent.speed = enemyData.patrolSpeed;
+        SetNewPatrolPoint(); // Get the first random point to walk to
+        
     }
 
     void Update()
@@ -66,14 +75,62 @@ public class Enemy : MonoBehaviour
             return;
         }
 
-        HandleMeleeAI();
+        // Check distance to player
+        float distanceToPlayer = Vector3.Distance(player.transform.position, transform.position);
+
+        // If player is in aggro range, switch to Chasing
+        if (distanceToPlayer <= aggroRange)
+        {
+            currentState = EnemyState.Chasing;
+        }
+
+        //enemies to "give up" chasing
+        else
+        {
+            currentState = EnemyState.Patrolling;
+        }
+
+        if (currentState == EnemyState.Chasing)
+        {
+            agent.speed = enemyData.agentSpeed;
+            HandleChasingAI();
+        }
+        else 
+        {
+            agent.speed = enemyData.patrolSpeed;
+            HandlePatrollingAI();
+        }
     }
 
-    private void HandleMeleeAI(){
+    private void HandlePatrollingAI()
+    {
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        {
+            SetNewPatrolPoint();
+        }
+    }
+
+    private void SetNewPatrolPoint()
+    {
+        Vector3 randomDirection = UnityEngine.Random.insideUnitSphere * patrolRadius;
+        randomDirection += transform.position;
+        
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(randomDirection, out hit, patrolRadius, 1))
+        {
+            agent.SetDestination(hit.position);
+        }
+    }
+
+
+    private void HandleChasingAI()
+    {
+        transform.LookAt(player.transform);
+
 
         if (timePassed >= attackCD)
         {
-            if (Vector3.Distance(player.transform.position, transform.position) <= attackRange)
+            if (agent.remainingDistance <= attackRange)
             {
                 animator.SetTrigger("attack");
                 timePassed = 0;
@@ -81,14 +138,8 @@ public class Enemy : MonoBehaviour
         }
         timePassed += Time.deltaTime;
 
-        if (newDestinationCD <= 0 && Vector3.Distance(player.transform.position, transform.position) <= aggroRange)
-        {
-            newDestinationCD = 0.5f;
-            agent.SetDestination(player.transform.position);
-        }
-        newDestinationCD -= Time.deltaTime;
-        transform.LookAt(player.transform);
-    } 
+        agent.SetDestination(player.transform.position);
+    }
 
 	private void OnCollisionEnter(Collision collision)
 	{
