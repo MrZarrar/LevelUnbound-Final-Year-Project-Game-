@@ -14,21 +14,26 @@ public class Projectiles : MonoBehaviour
 
     private Rigidbody rb;
     private float damage;
-    private string targetTag;
+    private int targetLayer; 
+    private int playerLayer;
+    private int enemyLayer;
 
     private Collider ownerCollider;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        
+
         GetComponent<Collider>().isTrigger = true;
+
+        playerLayer = LayerMask.NameToLayer("Player");
+        enemyLayer = LayerMask.NameToLayer("Enemy");
     }
 
-    public void Setup(float newDamage, string newTargetTag, Collider owner)
+    public void Setup(float newDamage, int newTargetLayer, Collider owner)
     {
         this.damage = newDamage;
-        this.targetTag = newTargetTag;
+        this.targetLayer = newTargetLayer;
         this.ownerCollider = owner;
     }
 
@@ -47,41 +52,36 @@ public class Projectiles : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.LogWarning($"PROJECTILE HIT: {other.name} (Tag: {other.tag})", other.gameObject);
-        // Check if we hit our intended target 
-        if (other.CompareTag(targetTag))
+        int hitLayer = other.gameObject.layer;
+
+        if (hitLayer == targetLayer)
         {
-            // Try to damage an Enemy
-            if (other.TryGetComponent(out Enemy enemy))
+            if (hitLayer == enemyLayer)
             {
-                enemy.TakeDamage(damage);
-                enemy.HitVFX(transform.position);
-                Debug.Log($"Projectile dealt {damage} damage to Enemy");
+                if (other.TryGetComponent(out Enemy enemy))
+                {
+                    enemy.TakeDamage(damage);
+                    enemy.HitVFX(transform.position);
+                }
+            }
+            else if (hitLayer == playerLayer)
+            {
+                if (other.TryGetComponent(out HealthSystem player))
+                {
+                    player.TakeDamage(damage);
+                    player.HitVFX(transform.position);
+                }
             }
 
-            // Try to damage a Player
-            if (other.TryGetComponent(out HealthSystem player))
-            {
-                player.TakeDamage(damage);
-                player.HitVFX(transform.position);
-                Debug.Log($"Projectile dealt {damage} damage to Player");
-            }
+            if (destroyOnHit) DestroyProjectile();
+        }
 
-            // We hit our target, destroy the projectile
-            if (destroyOnHit)
-            {
-                DestroyProjectile();
-            }
-        }
-        // Check if we hit a wall or something else
-        else if (!other.CompareTag("Player") && !other.CompareTag("Enemy") && !other.isTrigger)
+        else if (!other.isTrigger && hitLayer != playerLayer && hitLayer != enemyLayer)
         {
-            Debug.Log($"PROJECTILE HIT OBSTACLE: {other.name}. Destroying.", other.gameObject);
-            if (destroyOnHit)
-            {
-                DestroyProjectile();
-            }
+            Debug.LogError($"PROJECTILE HIT OBSTACLE: {other.name}. Destroying.", other.gameObject);
+            if (destroyOnHit) DestroyProjectile();
         }
+        
     }
 
     void DestroyProjectile()

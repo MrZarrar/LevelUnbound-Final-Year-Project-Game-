@@ -44,6 +44,8 @@ public class PlayerStats : MonoBehaviour
     public Stat intelligence;
     public Stat vitality;
 
+    private int enemyLayer;
+
     void Awake()
     {
         if (healthSystem == null) healthSystem = GetComponent<HealthSystem>();
@@ -57,6 +59,8 @@ public class PlayerStats : MonoBehaviour
         {
             xpBar.SetLevel(level, currentXP, xpToNextLevel);
         }
+
+        enemyLayer = LayerMask.NameToLayer("Enemy");
     }
 
     public void AddXP(int xpAmount)
@@ -188,7 +192,7 @@ public class PlayerStats : MonoBehaviour
         if (projectileScript != null)
         {
             
-            projectileScript.Setup(damage, "Enemy", GetComponent<CharacterController>());
+            projectileScript.Setup(damage, enemyLayer, GetComponent<CharacterController>());
         }
     }
 }
