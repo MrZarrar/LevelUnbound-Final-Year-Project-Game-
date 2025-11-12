@@ -4,6 +4,8 @@ using UnityEngine;
 public class EnemyData : ScriptableObject
 {
     public GameObject enemyPrefab;
+
+    public GameObject spawnVFX;
     
     [Header("Enemy Stats")]
     public float health = 3;
