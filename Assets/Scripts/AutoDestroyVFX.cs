@@ -1,15 +1,21 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "EnemyData", menuName = "Enemy Data")]
-public class EnemyData : ScriptableObject
+[RequireComponent(typeof(ParticleSystem))]
+public class AutoDestroyVFX : MonoBehaviour
 {
-    public GameObject enemyPrefab;
-    
-    [Header("Effects")]
-    public GameObject spawnVFX;
+    private ParticleSystem ps;
 
-    
-    [Header("Enemy Stats")]
-    public float health = 3;
+    void Start()
+    {
+        ps = GetComponent<ParticleSystem>();
+    }
 
-}  
+    void Update()
+    {
+        // When the particle system stops playing, destroy it
+        if (ps != null && !ps.IsAlive())
+        {
+            Destroy(gameObject);
+        }
+    }
+}
