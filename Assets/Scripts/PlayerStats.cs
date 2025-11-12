@@ -11,7 +11,14 @@ public class Stat
 }
 
 public class PlayerStats : MonoBehaviour
+
+
 {
+
+    [Header("Ranged Combat")]
+    [SerializeField] private GameObject manaBlastPrefab;
+    [SerializeField] private Transform projectileSpawnPoint;
+    [SerializeField] private float manaCost = 10f;
     [Header("Core Components")]
     [SerializeField] private HealthSystem healthSystem;
     [SerializeField] GameObject levelUpVFX;
@@ -127,6 +134,36 @@ public class PlayerStats : MonoBehaviour
     {
         playerWeapon = newWeapon;
         UpdateWeaponStats();
+    }
+    
+    public void CastManaBlast()
+    {
+        if (manaBlastPrefab == null)
+        {
+            Debug.LogError("Mana Blast Prefab is not set in PlayerStats!");
+            return;
+        }
+
+        if (!healthSystem.TryUseMana(manaCost))
+        {
+            Debug.Log("Not enough mana to cast!");
+            return; 
+        }
+
+        GameObject blast = Instantiate(
+            manaBlastPrefab, 
+            projectileSpawnPoint.position, 
+            projectileSpawnPoint.rotation
+        );
+
+        float damage = 5 + (intelligence.GetValue() * 0.1f);
+
+        Projectiles projectileScript = blast.GetComponent<Projectiles>();
+        if (projectileScript != null)
+        {
+            
+            projectileScript.Setup(damage, "Enemy", GetComponent<CharacterController>());
+        }
     }
 }
 
