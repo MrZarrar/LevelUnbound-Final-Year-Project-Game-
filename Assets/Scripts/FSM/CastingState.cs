@@ -3,9 +3,7 @@ using UnityEngine;
 public class CastingState : State
 {
     float timePassed;
-    float clipLength;
-    float clipSpeed;
-    float clipDuration;
+    private float castDuration = 1.0f;
 
     public CastingState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
     {
@@ -19,13 +17,7 @@ public class CastingState : State
 
         character.animator.applyRootMotion = true;
         timePassed = 0f;
-        
-        
-        character.animator.SetTrigger("cast"); 
-        character.animator.SetFloat("speed", 0f);
-
-        
-        clipDuration = float.MaxValue;
+    
     }
 
     public override void HandleInput()
@@ -40,20 +32,10 @@ public class CastingState : State
 
         timePassed += Time.deltaTime;
 
-        AnimatorClipInfo[] clipInfo = character.animator.GetCurrentAnimatorClipInfo(1);
-
-        if (clipInfo.Length > 0)
+        if (timePassed >= castDuration)
         {
-            AnimatorStateInfo stateInfo = character.animator.GetCurrentAnimatorStateInfo(1);
-            clipLength = clipInfo[0].clip.length;
-            clipSpeed = stateInfo.speed; 
-            clipDuration = clipLength / clipSpeed;
-        }
+            stateMachine.ChangeState(character.previousMovementState);            
 
-        
-        if (timePassed >= clipDuration)
-        {
-            stateMachine.ChangeState(character.combatting);
             character.animator.SetTrigger("move");
         }
     }

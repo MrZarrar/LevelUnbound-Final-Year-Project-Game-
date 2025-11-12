@@ -23,7 +23,8 @@ public class StandingState: State
     public override void Enter()
     {
         base.Enter();
- 
+        character.previousMovementState = this;
+
         jump = false;
         crouch = false;
         sprint = false;
@@ -66,6 +67,7 @@ public class StandingState: State
         {
             rangedAttack = true;
         }
+
  
         input = moveAction.ReadValue<Vector2>();
         velocity = new Vector3(input.x, 0, input.y);
@@ -109,8 +111,16 @@ public class StandingState: State
             stateMachine.ChangeState(character.combatting);
             character.animator.SetTrigger("drawWeapon");
         }
+        if (rangedAttack)
+        {
+            character.animator.SetTrigger("cast1");
+            stateMachine.ChangeState(character.casting);
+        }
         
-
+        if (chargeManaAction.triggered)
+        {
+            stateMachine.ChangeState(character.charging);
+        }
     }
  
     public override void PhysicsUpdate()

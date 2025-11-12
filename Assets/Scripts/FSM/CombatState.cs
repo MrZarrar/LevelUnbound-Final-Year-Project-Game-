@@ -19,6 +19,7 @@ public class CombatState : State
     public override void Enter()
     {
         base.Enter();
+        character.previousMovementState = this;
 
         sheathWeapon = false;
         input = Vector2.zero;
@@ -52,6 +53,11 @@ public class CombatState : State
             rangedAttack = true;
         }
 
+        if (chargeManaAction.triggered)
+        {
+            stateMachine.ChangeState(character.charging);
+        }
+
         input = moveAction.ReadValue<Vector2>();
         velocity = new Vector3(input.x, 0, input.y);
 
@@ -80,6 +86,7 @@ public class CombatState : State
 
         if (rangedAttack) 
         {
+            character.animator.SetTrigger("cast");
             stateMachine.ChangeState(character.casting);
         }
         

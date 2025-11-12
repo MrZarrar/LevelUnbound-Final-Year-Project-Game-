@@ -12,6 +12,7 @@ public class EquipmentSystem : MonoBehaviour
     GameObject currentWeaponInSheath;
 
     private PlayerStats playerStats;
+    private Animator animator;
 
     void Start()
     {
@@ -33,14 +34,16 @@ public class EquipmentSystem : MonoBehaviour
         Destroy(currentWeaponInSheath);
 
         playerStats.SetActiveWeapon(currentWeaponInHand.GetComponentInChildren<DamageDealer>());
+
     }
 
     public void SheathWeapon()
     {
         currentWeaponInSheath = Instantiate(weapon, weaponSheath.transform);
         Destroy(currentWeaponInHand);
-        
+
         playerStats.SetActiveWeapon(currentWeaponInSheath.GetComponentInChildren<DamageDealer>());
+        
     }
 
     public void StartDealDamage()

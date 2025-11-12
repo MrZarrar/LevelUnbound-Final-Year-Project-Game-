@@ -83,6 +83,26 @@ public class HealthSystem : MonoBehaviour
         return false;
     }
 
+    public void RegenerateMana(float amount)
+    {
+        if (currentMana >= maxMana)
+        {
+            return;
+        }
+
+        currentMana += amount;
+        currentMana = Mathf.Clamp(currentMana, 0, maxMana); // Don't go over max
+
+        if (playerManaBar != null)
+        {
+            playerManaBar.SetMana((int)currentMana);
+        }
+    }
+
+    public bool IsManaFull()
+    {
+        return currentMana >= maxMana;
+    }
 
     public void TakeDamage(float damageAmount)
     {

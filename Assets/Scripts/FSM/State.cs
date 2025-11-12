@@ -18,6 +18,7 @@ public class State
     public InputAction drawWeaponAction;
     public InputAction attackAction;
     public InputAction rangedAttackAction;
+    public InputAction chargeManaAction;
 
 
     public State(Character _character, StateMachine _stateMachine)
@@ -33,12 +34,12 @@ public class State
         drawWeaponAction = character.playerInput.actions["DrawWeapon"];
         attackAction = character.playerInput.actions["Attack"];
         rangedAttackAction = character.playerInput.actions["RangedAttack"];
+        chargeManaAction = character.playerInput.actions["ChargeMana"];
 
     }
  
     public virtual void Enter()
     {
-        //StateUI.instance.SetStateText(this.ToString());
         Debug.Log("Enter State: "+this.ToString());
     }
  
