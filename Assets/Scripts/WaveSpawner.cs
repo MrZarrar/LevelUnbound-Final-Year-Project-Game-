@@ -138,7 +138,7 @@ public class WaveSpawner : MonoBehaviour
             {
                 Debug.Log("BOSS DEFEATED! YOU WIN!");
                 enemiesLeftText.text = "";
-                WaveAnnouncement_Text = "YOU WIN!";
+                StartCoroutine(ShowWaveAnnouncement("!! BOSS DEFEATED !!"));
                 waveCounterText.text = "";
                 // TODO: Add game win logic 
             }
