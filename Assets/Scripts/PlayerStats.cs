@@ -19,6 +19,12 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private GameObject manaBlastPrefab;
     [SerializeField] private Transform projectileSpawnPoint;
     [SerializeField] private float manaCost = 10f;
+
+    [SerializeField] private RectTransform reticleRectTransform;
+
+    [SerializeField] private LayerMask aimLayerMask;
+
+
     [Header("Core Components")]
     [SerializeField] private HealthSystem healthSystem;
     [SerializeField] GameObject levelUpVFX;
@@ -150,13 +156,33 @@ public class PlayerStats : MonoBehaviour
             return; 
         }
 
+        Vector3 targetPoint;
+
+        Ray ray = Camera.main.ScreenPointToRay(reticleRectTransform.position);
+
+        
+        if (Physics.Raycast(ray, out RaycastHit hit, 100f, aimLayerMask))
+        {
+            targetPoint = hit.point;
+        }
+        else
+        {
+            targetPoint = ray.GetPoint(100f);
+        }
+
+        Vector3 direction = (targetPoint - projectileSpawnPoint.position).normalized;
+        Quaternion lookRotation = Quaternion.LookRotation(direction);
+
         GameObject blast = Instantiate(
             manaBlastPrefab, 
             projectileSpawnPoint.position, 
-            projectileSpawnPoint.rotation
+            lookRotation 
         );
 
-        float damage = 5 + (intelligence.GetValue() * 0.1f);
+        float baseSpellDamage = 5f; 
+        float intelligenceMultiplier = 1.0f + (intelligence.GetValue() * 0.1f); 
+
+        float damage = baseSpellDamage * intelligenceMultiplier;
 
         Projectiles projectileScript = blast.GetComponent<Projectiles>();
         if (projectileScript != null)
