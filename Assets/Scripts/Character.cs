@@ -5,18 +5,18 @@ public class Character : MonoBehaviour
     [Header("Controls")]
     public float playerSpeed = 5.0f;
     public float crouchSpeed = 2.0f;
-    public float sprintSpeed = 7.0f;
-    public float jumpHeight = 0.8f; 
+    public float jumpHeight = 0.8f;
     public float gravityMultiplier = 2;
     public float rotationSpeed = 5f;
 
-    public float staminaDrainRate = 10f;
-    public float staminaRegenRate = 5f;
+    [HideInInspector] public float sprintSpeed = 7.0f;
+    [HideInInspector] public float staminaDrainRate = 30f;
+    [HideInInspector] public float staminaRegenRate = 5f;
     public GameObject chargeVFX;
     public GameObject healVFX;
 
 
-// too high of velocity damp time can cause sliding 
+    // too high of velocity damp time can cause sliding 
     [Header("Animation Smoothing")]
     [Range(0, 1)]
     public float speedDampTime = 0.1f;
@@ -26,7 +26,7 @@ public class Character : MonoBehaviour
     public float rotationDampTime = 0.2f;
     [Range(0, 1)]
     public float airControl = 0.5f;
- 
+
     public StateMachine movementSM;
     public StandingState standing;
     public JumpingState jumping;
@@ -45,7 +45,7 @@ public class Character : MonoBehaviour
 
     [HideInInspector]
     public State previousMovementState;
- 
+
     [HideInInspector]
     public float gravityValue = -9.81f;
     [HideInInspector]
@@ -68,8 +68,8 @@ public class Character : MonoBehaviour
 
     [HideInInspector]
     public PlayerStats playerStats;
- 
- 
+
+
     private void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -100,17 +100,24 @@ public class Character : MonoBehaviour
         normalColliderCenter = controller.center;
         gravityValue *= gravityMultiplier;
     }
- 
+
     private void Update()
     {
         movementSM.currentState.HandleInput();
- 
+
         movementSM.currentState.LogicUpdate();
     }
- 
+
     private void FixedUpdate()
     {
         movementSM.currentState.PhysicsUpdate();
+    }
+    
+    public void SetMovementStats(float newSprintSpeed, float newStaminaRegen, float newStaminaDrain)
+    {
+        sprintSpeed = newSprintSpeed;
+        staminaRegenRate = newStaminaRegen;
+        staminaDrainRate = newStaminaDrain;
     }
 }
  

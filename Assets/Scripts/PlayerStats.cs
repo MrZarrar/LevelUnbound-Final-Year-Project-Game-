@@ -15,6 +15,16 @@ public class PlayerStats : MonoBehaviour
 
 {
 
+    [Header("Movement Stats")]
+    [SerializeField] private float baseSprintSpeed = 6.0f;
+    [SerializeField] private float baseStaminaRegen = 2f;
+    [SerializeField] private float baseStaminaDrain = 90f;
+    [Space]
+    [SerializeField] private float agiSprintBonus = 0.02f;     // Bonus speed per agility point
+    [SerializeField] private float agiRegenBonus = 0.01f;      // Bonus regen per agility point
+    [SerializeField] private float agiDrainReduction = 0.005f;  // Drain reduction per agility point
+    [SerializeField] private float minStaminaDrain = 2f;
+
     [Header("Ranged Combat")]
     [SerializeField] private GameObject manaBlastPrefab;
     [SerializeField] private Transform projectileSpawnPoint;
@@ -31,6 +41,7 @@ public class PlayerStats : MonoBehaviour
 
     private DamageDealer playerWeapon;
     private Animator animator;
+    private Character character;
 
     [Header("Leveling")]
     [SerializeField] private XPBar xpBar;
@@ -51,9 +62,10 @@ public class PlayerStats : MonoBehaviour
         if (healthSystem == null) healthSystem = GetComponent<HealthSystem>();
 
         animator = GetComponent<Animator>();
+        character = GetComponent<Character>();
 
 
-        UpdateVitals();
+        UpdateAllStats();
 
         if (xpBar != null)
         {
@@ -103,6 +115,23 @@ public class PlayerStats : MonoBehaviour
     {
         UpdateVitals();
         UpdateWeaponStats();
+        UpdateMovementStats();
+    }
+
+    private void UpdateMovementStats()
+    {
+        if (character == null) return; 
+
+        int agi = agility.GetValue();
+
+        float totalSprintSpeed = baseSprintSpeed + (agi * agiSprintBonus);
+        float totalStaminaRegen = baseStaminaRegen + (agi * agiRegenBonus);
+        
+        float totalStaminaDrain = baseStaminaDrain - (agi * agiDrainReduction);
+        
+        totalStaminaDrain = Mathf.Max(totalStaminaDrain, minStaminaDrain);
+
+        character.SetMovementStats(totalSprintSpeed, totalStaminaRegen, totalStaminaDrain);
     }
 
 

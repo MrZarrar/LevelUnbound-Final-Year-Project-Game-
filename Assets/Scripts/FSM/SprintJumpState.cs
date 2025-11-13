@@ -22,33 +22,36 @@ public class SprintJumpState : State
         character.animator.SetTrigger("sprintJump");
         
         gravityValue = character.gravityValue;
-        playerSpeed = character.sprintSpeed; 
-
 
         character.playerVelocity.y = Mathf.Sqrt(character.jumpHeight * -2f * gravityValue);
 
+
         currentVelocity = new Vector3(character.playerVelocity.x, 0, character.playerVelocity.z);
         
-        velocity = currentVelocity * 0.7f; 
+        velocity = currentVelocity; 
+        
     }
 
     public override void Exit()
     {
         base.Exit();
+        character.playerVelocity = currentVelocity * playerSpeed;
     }
 
     public override void HandleInput()
     {
         base.HandleInput();
 
-        // Allow for air control while jumping
         input = moveAction.ReadValue<Vector2>();
-        velocity = new Vector3(input.x, 0, input.y);
+        
 
+        velocity = new Vector3(input.x, 0, input.y);
         velocity = velocity.x * character.cameraTransform.right.normalized + velocity.z * character.cameraTransform.forward.normalized;
         velocity.y = 0f;
-    }
+        
 
+        velocity *= character.sprintSpeed;
+    }
     public override void LogicUpdate()
     {
         base.LogicUpdate();
@@ -68,7 +71,10 @@ public class SprintJumpState : State
 
         currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
 
-        Vector3 combinedVelocity = (currentVelocity * playerSpeed) + new Vector3(0, character.playerVelocity.y, 0);
+        Vector3 combinedVelocity = currentVelocity + new Vector3(0, character.playerVelocity.y, 0);
+        
+
+        
         character.controller.Move(combinedVelocity * Time.deltaTime);
     }
 }

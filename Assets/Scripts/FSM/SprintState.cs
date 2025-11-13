@@ -23,7 +23,7 @@ public class SprintState : State
         sprintJump = false;
         input = Vector2.zero;
         velocity = Vector3.zero;
-        currentVelocity = Vector3.zero;
+        currentVelocity = character.playerVelocity;
         gravityVelocity.y = 0;
 
         playerSpeed = character.sprintSpeed;
@@ -35,10 +35,7 @@ public class SprintState : State
     {
         base.Enter();
         input = moveAction.ReadValue<Vector2>();
-        velocity = new Vector3(input.x, 0, input.y);
-
-        velocity = velocity.x * character.cameraTransform.right.normalized + velocity.z * character.cameraTransform.forward.normalized;
-        velocity.y = 0f;
+ 
         if (sprintAction.triggered || input.sqrMagnitude == 0f)
         {
             sprint = false;
@@ -83,9 +80,15 @@ public class SprintState : State
         {
             gravityVelocity.y = 0f;
         }
-        currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
 
-        character.controller.Move(currentVelocity * Time.deltaTime * playerSpeed + gravityVelocity * Time.deltaTime);
+        velocity = new Vector3(input.x, 0, input.y);
+        velocity = velocity.x * character.cameraTransform.right.normalized + velocity.z * character.cameraTransform.forward.normalized;
+        velocity.y = 0f;
+
+        velocity *= character.sprintSpeed;
+
+        currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
+        character.controller.Move(currentVelocity * Time.deltaTime + gravityVelocity * Time.deltaTime);
 
 
         if (velocity.sqrMagnitude > 0)

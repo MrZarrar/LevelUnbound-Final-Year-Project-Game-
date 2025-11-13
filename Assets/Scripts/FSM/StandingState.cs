@@ -71,10 +71,7 @@ public class StandingState: State
 
  
         input = moveAction.ReadValue<Vector2>();
-        velocity = new Vector3(input.x, 0, input.y);
- 
-        velocity = velocity.x * character.cameraTransform.right.normalized + velocity.z * character.cameraTransform.forward.normalized;
-        velocity.y = 0f;
+
      
     }
 
@@ -84,21 +81,21 @@ public class StandingState: State
 
         character.animator.SetFloat("speed", input.magnitude, character.speedDampTime, Time.deltaTime);
 
-        if (!character.healthSystem.IsStaminaFull())
+        if (!sprintAction.IsPressed() && !character.healthSystem.IsStaminaFull())
         {
             character.healthSystem.RegenerateStamina(character.staminaRegenRate * Time.deltaTime);
         }
 
         if (sprint)
         {
-
-            if (character.healthSystem.GetCurrentStamina() > 0)
-            {
+            if (input.magnitude > 0 && character.healthSystem.GetCurrentStamina() > 0)
+            { 
                 stateMachine.ChangeState(character.sprinting);
             }
 
-
+            sprint = false;
         }
+
         if (jump)
         {
             stateMachine.ChangeState(character.jumping);
@@ -136,12 +133,18 @@ public class StandingState: State
             gravityVelocity.y = 0f;
         }
        
-        currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity,ref cVelocity, character.velocityDampTime);
-        character.controller.Move(currentVelocity * Time.deltaTime * playerSpeed + gravityVelocity * Time.deltaTime);
-  
-        if (velocity.sqrMagnitude>0)
+        velocity = new Vector3(input.x, 0, input.y);
+        velocity = velocity.x * character.cameraTransform.right.normalized + velocity.z * character.cameraTransform.forward.normalized;
+        velocity.y = 0f;
+        
+        velocity *= character.playerSpeed; 
+        
+        currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
+        character.controller.Move(currentVelocity * Time.deltaTime + gravityVelocity * Time.deltaTime);
+        
+        if (velocity.sqrMagnitude > 0)
         {
-            character.transform.rotation = Quaternion.Slerp(character.transform.rotation, Quaternion.LookRotation(velocity),character.rotationDampTime);
+            character.transform.rotation = Quaternion.Slerp(character.transform.rotation, Quaternion.LookRotation(velocity), character.rotationDampTime);
         }
         
     }
