@@ -51,6 +51,8 @@ public class Character : MonoBehaviour
     [HideInInspector]
     public float normalColliderHeight;
     [HideInInspector]
+    public Vector3 normalColliderCenter;
+    [HideInInspector]
     public CharacterController controller;
     [HideInInspector]
     public PlayerInput playerInput;
@@ -95,6 +97,7 @@ public class Character : MonoBehaviour
         movementSM.Initialize(standing);
 
         normalColliderHeight = controller.height;
+        normalColliderCenter = controller.center;
         gravityValue *= gravityMultiplier;
     }
  

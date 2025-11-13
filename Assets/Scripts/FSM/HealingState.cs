@@ -10,6 +10,9 @@ public class HealingState : State
     float playerSpeed;
     Vector3 cVelocity;
 
+    const float crouchHeight = 1.0f;      
+    static readonly Vector3 crouchCenter = new Vector3(0f, 0.65f, 0f);
+
 
     private float healthPerSecond = 10f; // How much HP you heal
     private float manaCostPerSecond = 30f; // How much mana it costs
@@ -96,6 +99,10 @@ public class HealingState : State
     public override void Exit()
     {
         base.Exit();
+
+        character.animator.SetTrigger("move");
+        character.controller.height = character.normalColliderHeight;
+        character.controller.center = character.normalColliderCenter;
 
         
         if (activeVFX != null)

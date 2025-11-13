@@ -12,6 +12,7 @@ public class CrouchingState : State
     float originalHeight;
     Vector3 originalCenter;
 
+    private bool isExitingToHeal = false;
     const float crouchHeight = 1.0f;      
     static readonly Vector3 crouchCenter = new Vector3(0f, 0.65f, 0f); 
 
@@ -41,11 +42,17 @@ public class CrouchingState : State
     public override void Exit()
     {
         base.Exit();
-        character.animator.SetTrigger("move");
 
-        // Restore normal collider
-        character.controller.height = originalHeight;
-        character.controller.center = originalCenter;
+
+        if (!isExitingToHeal)
+        {
+            character.animator.SetTrigger("move");
+
+            // Restore normal collider using the saved values from Character.cs
+            character.controller.height = character.normalColliderHeight;
+            character.controller.center = character.normalColliderCenter;
+        }
+
 
         gravityVelocity.y = 0f;
     }
@@ -66,6 +73,7 @@ public class CrouchingState : State
 
         if (chargeManaAction.triggered)
         {
+            isExitingToHeal = true;
             stateMachine.ChangeState(character.healing);
         }
     }
