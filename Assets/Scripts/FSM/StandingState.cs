@@ -22,7 +22,6 @@ public class StandingState: State
     public override void Enter()
     {
         base.Enter();
-        character.animator.SetTrigger("move");
         character.previousMovementState = this;
 
         jump = false;

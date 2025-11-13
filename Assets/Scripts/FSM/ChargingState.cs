@@ -94,6 +94,7 @@ public class ChargingState : State
         base.Exit();
 
         character.animator.SetBool("isCharging", false);
+        character.animator.SetTrigger("move");
         
         if (activeVFX != null)
         {
