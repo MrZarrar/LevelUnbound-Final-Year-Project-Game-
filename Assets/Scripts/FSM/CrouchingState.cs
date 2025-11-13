@@ -63,6 +63,11 @@ public class CrouchingState : State
         {
             stateMachine.ChangeState(character.standing);
         }
+
+        if (chargeManaAction.triggered)
+        {
+            stateMachine.ChangeState(character.healing);
+        }
     }
 
     public override void LogicUpdate()

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ChargingState : State
+public class HealingState : State
 {
     private GameObject activeVFX;
 
@@ -10,7 +10,11 @@ public class ChargingState : State
     float playerSpeed;
     Vector3 cVelocity;
 
-    public ChargingState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
+
+    private float healthPerSecond = 10f; // How much HP you heal
+    private float manaCostPerSecond = 20f; // How much mana it costs
+
+    public HealingState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
     {
         character = _character;
         stateMachine = _stateMachine;
@@ -20,9 +24,9 @@ public class ChargingState : State
     {
         base.Enter();
 
-        if (character.chargeVFX != null)
+        if (character.healVFX != null)
         {
-            activeVFX = Object.Instantiate(character.chargeVFX, character.transform);
+            activeVFX = Object.Instantiate(character.healVFX, character.transform);
         }
 
         input = Vector2.zero;
@@ -43,9 +47,9 @@ public class ChargingState : State
         velocity.y = 0f;
 
 
-        if (!chargeManaAction.IsPressed() || character.healthSystem.IsManaFull())
+        if (!chargeManaAction.IsPressed() || character.healthSystem.IsHealthFull())
         {
-            stateMachine.ChangeState(character.previousMovementState);
+            stateMachine.ChangeState(character.crouching);
         }
     }
 
@@ -53,8 +57,18 @@ public class ChargingState : State
     {
         base.LogicUpdate();
 
-        float regenAmount = 10f; 
-        character.healthSystem.RegenerateMana(regenAmount * Time.deltaTime);
+
+        float manaToCost = manaCostPerSecond * Time.deltaTime;
+        float healthToRegen = healthPerSecond * Time.deltaTime;
+
+        if (character.healthSystem.TryUseMana(manaToCost))
+        {
+            character.healthSystem.RegenerateHealth(healthToRegen);
+        }
+        else
+        {
+            stateMachine.ChangeState(character.crouching);
+        }
 
         character.animator.SetFloat("speed", input.magnitude, character.speedDampTime, Time.deltaTime);
     }
@@ -82,6 +96,7 @@ public class ChargingState : State
     public override void Exit()
     {
         base.Exit();
+
         
         if (activeVFX != null)
         {

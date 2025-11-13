@@ -104,6 +104,30 @@ public class HealthSystem : MonoBehaviour
         return currentMana >= maxMana;
     }
 
+
+
+    public void RegenerateHealth(float amount)
+    {
+        if (currentHealth >= maxHealth)
+        {
+            return;
+        }
+
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Don't go over max
+
+        if (playerHealthBar != null)
+        {
+            playerHealthBar.SetHP((int)currentHealth);
+        }
+    }
+
+    public bool IsHealthFull()
+    {
+        return currentHealth >= maxHealth;
+    }
+
+
     public void TakeDamage(float damageAmount)
     {
         currentHealth -= damageAmount;

@@ -20,7 +20,6 @@ public class State
     public InputAction rangedAttackAction;
     public InputAction chargeManaAction;
 
-
     public State(Character _character, StateMachine _stateMachine)
     {
         character = _character;
@@ -35,7 +34,6 @@ public class State
         attackAction = character.playerInput.actions["Attack"];
         rangedAttackAction = character.playerInput.actions["RangedAttack"];
         chargeManaAction = character.playerInput.actions["ChargeMana"];
-
     }
  
     public virtual void Enter()

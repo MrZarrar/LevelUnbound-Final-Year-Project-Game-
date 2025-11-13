@@ -13,6 +13,7 @@ public class Character : MonoBehaviour
     public float staminaDrainRate = 10f;
     public float staminaRegenRate = 5f;
     public GameObject chargeVFX;
+    public GameObject healVFX;
 
 
 // too high of velocity damp time can cause sliding 
@@ -39,8 +40,9 @@ public class Character : MonoBehaviour
     public CastingState casting;
 
     public ChargingState charging;
+    public HealingState healing;
 
-    
+
     [HideInInspector]
     public State previousMovementState;
  
@@ -87,6 +89,7 @@ public class Character : MonoBehaviour
         attacking = new AttackState(this, movementSM);
         casting = new CastingState(this, movementSM);
         charging = new ChargingState(this, movementSM);
+        healing = new HealingState(this, movementSM);
 
 
         movementSM.Initialize(standing);
