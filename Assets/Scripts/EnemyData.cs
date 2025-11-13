@@ -4,6 +4,8 @@ using UnityEngine;
 public class EnemyData : ScriptableObject
 {
     public GameObject enemyPrefab;
+
+    public string deathAnimationName;
     
     [Header("Effects")]
     public GameObject spawnVFX;

@@ -39,9 +39,11 @@ public class Enemy : MonoBehaviour
     public static event Action OnEnemyDied;
 
     GameObject player;
-    NavMeshAgent agent; 
+    NavMeshAgent agent;
     Animator animator;
     float timePassed;
+
+    private bool isDying = false;
 
 
     void Start()
@@ -49,7 +51,7 @@ public class Enemy : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
-        
+
         playerLayer = LayerMask.NameToLayer("Player");
         ownCollider = GetComponent<Collider>();
 
@@ -64,7 +66,7 @@ public class Enemy : MonoBehaviour
         meleeAttackRange = enemyData.meleeAttackRange;
         meleeWeaponDamage = enemyData.meleeWeaponDamage;
 
-    
+
         hasRangedAttack = enemyData.hasRangedAttack;
         rangedAttackCD = enemyData.rangedAttackCD;
         rangedAttackRange = enemyData.rangedAttackRange;
@@ -88,7 +90,7 @@ public class Enemy : MonoBehaviour
         currentState = EnemyState.Patrolling;
         agent.speed = enemyData.patrolSpeed;
         SetNewPatrolPoint(); // Get the first random point to walk to
-        
+
     }
 
     void Update()
@@ -116,7 +118,7 @@ public class Enemy : MonoBehaviour
             agent.stoppingDistance = enemyData.stoppingDistance;
             HandleChasingAI(distanceToPlayer);
         }
-        else 
+        else
         {
             agent.speed = enemyData.patrolSpeed;
             agent.stoppingDistance = 0f;
@@ -136,7 +138,7 @@ public class Enemy : MonoBehaviour
     {
         Vector3 randomDirection = UnityEngine.Random.insideUnitSphere * patrolRadius;
         randomDirection += transform.position;
-        
+
         NavMeshHit hit;
         if (NavMesh.SamplePosition(randomDirection, out hit, patrolRadius, 1))
         {
@@ -154,21 +156,21 @@ public class Enemy : MonoBehaviour
         if (distanceToPlayer <= meleeAttackRange)
         {
             agent.SetDestination(player.transform.position); // Keep pushing
-            
+
             if (meleeTimePassed >= meleeAttackCD)
             {
-                animator.SetTrigger("attack"); 
+                animator.SetTrigger("attack");
                 meleeTimePassed = 0;
             }
         }
         // Check for Ranged Attack
         else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
         {
-            agent.SetDestination(player.transform.position); 
-            
+            agent.SetDestination(player.transform.position);
+
             if (rangedTimePassed >= rangedAttackCD)
             {
-                animator.SetTrigger("rangedAttack"); 
+                animator.SetTrigger("rangedAttack");
                 rangedTimePassed = 0;
             }
         }
@@ -178,23 +180,23 @@ public class Enemy : MonoBehaviour
             agent.SetDestination(player.transform.position);
         }
     }
-    
+
 
     public void SpawnProjectile()
     {
         if (enemyData.projectilePrefab == null) return;
-        
-        Vector3 aimTarget = player.transform.position + Vector3.up * 1f; 
+
+        Vector3 aimTarget = player.transform.position + Vector3.up * 1f;
         Vector3 direction = (aimTarget - projectileSpawnPoint.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(direction);
-        
+
         GameObject blast = Instantiate(
-            enemyData.projectilePrefab, 
-            projectileSpawnPoint.position, 
+            enemyData.projectilePrefab,
+            projectileSpawnPoint.position,
             lookRotation
         );
 
-        float damage = rangedWeaponDamage; 
+        float damage = rangedWeaponDamage;
 
         Projectiles projectileScript = blast.GetComponent<Projectiles>();
         if (projectileScript != null)
@@ -203,7 +205,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-	private void OnCollisionEnter(Collision collision)
+    private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Player"))
         {
@@ -214,21 +216,22 @@ public class Enemy : MonoBehaviour
 
     void Die()
     {
+        if (isDying) return;
+        isDying = true;
 
-        OnEnemyDied?.Invoke();
+        agent.enabled = false;
+        if (GetComponent<Collider>() != null)
+        {
+            GetComponent<Collider>().enabled = false;
+        }
 
-        GameObject ragdollInstance = Instantiate(ragdoll, transform.position, transform.rotation);
-
-        Destroy(this.gameObject);
-
-        player.GetComponent<PlayerStats>().AddXP(XPDrop);
-
-        Destroy(ragdollInstance, 10f);
-        
+        StartCoroutine(DeathRoutine());
     }
 
     public void TakeDamage(float damageAmount)
     {
+        if (isDying) return;
+
         health -= damageAmount;
         healthBar.SetHP((int)health);
         animator.SetTrigger("damage");
@@ -245,7 +248,7 @@ public class Enemy : MonoBehaviour
         healthBar.gameObject.SetActive(true);
     }
 
-     public void StartLeftHandDamage()
+    public void StartLeftHandDamage()
     {
         if (leftHandDealer != null)
             leftHandDealer.StartDealDamage();
@@ -272,13 +275,75 @@ public class Enemy : MonoBehaviour
     public void HitVFX(Vector3 hitPosition)
     {
         GameObject hit = Instantiate(hitVFX, hitPosition, Quaternion.identity);
-    }  
+    }
 
     private void OnDrawGizmos()
     {
+        if (enemyData == null)
+        {
+            return;
+        }
+
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(transform.position, meleeAttackRange);
+        Gizmos.DrawWireSphere(transform.position, enemyData.meleeAttackRange);
+
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, aggroRange);
-    } 
+        Gizmos.DrawWireSphere(transform.position, enemyData.aggroRange);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, enemyData.stoppingDistance);
+
+        if (enemyData.hasRangedAttack)
+        {
+            Gizmos.color = Color.purple;
+            Gizmos.DrawWireSphere(transform.position, enemyData.rangedAttackRange);
+        }
+    }
+
+
+    private IEnumerator DeathRoutine()
+    {
+        float animationLength = GetAnimationClipLength(); 
+        
+        if (animationLength > 0)
+        {
+            animator.SetTrigger("death"); 
+            yield return new WaitForSeconds(animationLength);
+        }
+
+        
+        OnEnemyDied?.Invoke();
+
+        GameObject ragdollInstance = Instantiate(ragdoll, transform.position, transform.rotation);
+        Destroy(ragdollInstance, 10f);
+
+        if (player != null)
+        {
+            player.GetComponent<PlayerStats>().AddXP(XPDrop);
+        }
+
+        Destroy(this.gameObject);
+    }
+
+    private float GetAnimationClipLength()
+    {
+        if (string.IsNullOrEmpty(enemyData.deathAnimationName))
+        {
+            return 0.0f; // No name = 0 second wait
+        }
+
+        AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
+        foreach (AnimationClip clip in clips)
+        {
+            if (clip.name == enemyData.deathAnimationName)
+            {
+                return clip.length; 
+            }
+        }
+        
+        Debug.LogWarning("Enemy '" + gameObject.name + "' specified death animation '" + enemyData.deathAnimationName + "' but it was not found in the Animator.");
+        return 0.0f; // Return 0 so the game doesn't stall
+    }
+
 } 
+
