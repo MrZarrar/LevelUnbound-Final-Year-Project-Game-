@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro; 
+using TMPro;
 
 public class WaveSpawner : MonoBehaviour
 {
@@ -9,14 +9,17 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private Wave[] waves;
     [SerializeField] private Transform[] spawnPoints;
 
+    [SerializeField] private GameObject exitPortalPrefab;
+    [SerializeField] private Transform exitPortalSpawnPoint;
+
     [Header("Boss Config")]
     [SerializeField] private GameObject bossPrefab;
     [SerializeField] private Transform bossSpawnPoint;
-    
+
     [Header("Boss Minion Config")]
-    [SerializeField] private GameObject minionPrefab; 
-    [SerializeField] private int minionCount = 4; 
-    [SerializeField] private float minionSpawnInterval = 3f; 
+    [SerializeField] private GameObject minionPrefab;
+    [SerializeField] private int minionCount = 4;
+    [SerializeField] private float minionSpawnInterval = 3f;
 
 
     [Header("UI")]
@@ -87,12 +90,12 @@ public class WaveSpawner : MonoBehaviour
     {
         Debug.Log("Spawning BOSS!");
         bossHasSpawned = true;
-        
-        enemiesLeftInWave = 1; 
+
+        enemiesLeftInWave = 1;
 
         Transform spawnPoint = bossSpawnPoint != null ? bossSpawnPoint : spawnPoints[Random.Range(0, spawnPoints.Length)];
         Instantiate(bossPrefab, spawnPoint.position, spawnPoint.rotation);
-        
+
         StartCoroutine(ShowWaveAnnouncement("!! BOSS FIGHT !!"));
 
         if (minionPrefab != null && minionCount > 0)
@@ -101,7 +104,7 @@ public class WaveSpawner : MonoBehaviour
 
             StartCoroutine(SpawnMinionsRoutine());
         }
-        
+
         UpdateUIForBossWave();
     }
 
@@ -121,7 +124,7 @@ public class WaveSpawner : MonoBehaviour
         for (int i = 0; i < minionCount; i++)
         {
             yield return new WaitForSeconds(minionSpawnInterval);
-            
+
             Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
             Instantiate(minionPrefab, spawnPoint.position, spawnPoint.rotation);
             Debug.Log("Spawning minion!");
@@ -131,27 +134,39 @@ public class WaveSpawner : MonoBehaviour
 
     void HandleEnemyDied()
     {
-        if (bossHasSpawned)
-        {
-            enemiesLeftInWave--;
-            if (enemiesLeftInWave <= 0)
-            {
-                Debug.Log("BOSS DEFEATED! YOU WIN!");
-                enemiesLeftText.text = "";
-                StartCoroutine(ShowWaveAnnouncement("!! BOSS DEFEATED !!"));
-                waveCounterText.text = "";
-                // TODO: Add game win logic 
-            }
-            return; 
-        }
-
-        enemiesLeftInWave--;
-        UpdateUI();
+        enemiesLeftInWave--; 
 
         if (enemiesLeftInWave <= 0)
         {
-            currentWaveIndex++;
-            StartWave(currentWaveIndex);
+            if (bossHasSpawned)
+            {
+                Debug.Log("BOSS DEFEATED! YOU WIN!");
+                
+                // Show win message
+                StartCoroutine(ShowWaveAnnouncement("!! BOSS DEFEATED !!"));
+                enemiesLeftText.text = "YOU WIN!";
+                waveCounterText.text = "";
+                
+                SpawnExitPortal(); 
+            }
+            else
+            {
+
+                currentWaveIndex++;
+                StartWave(currentWaveIndex);
+            }
+        }
+        else
+        {
+
+            if (bossHasSpawned)
+            {
+                UpdateUIForBossWave(); 
+            }
+            else
+            {
+                UpdateUI();
+            }
         }
     }
 
@@ -171,12 +186,21 @@ public class WaveSpawner : MonoBehaviour
         {
             waveCounterText.text = "Next wave is the BOSS!";
         }
-        
-        
-    } 
+
+
+    }
     void UpdateUIForBossWave()
     {
         enemiesLeftText.text = $"Enemies Left: {enemiesLeftInWave}";
         waveCounterText.text = "!! BOSS WAVE !!";
+    }
+    
+    private void SpawnExitPortal()
+    {
+        if (exitPortalPrefab == null) return;
+        
+        Transform spawnPoint = exitPortalSpawnPoint != null ? exitPortalSpawnPoint : bossSpawnPoint;
+        
+        Instantiate(exitPortalPrefab, spawnPoint.position, Quaternion.identity);
     }
 }

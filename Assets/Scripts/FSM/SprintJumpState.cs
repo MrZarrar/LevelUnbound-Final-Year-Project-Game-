@@ -1,43 +1,74 @@
 using UnityEngine;
-public class SprintJumpState:State
+
+public class SprintJumpState : State
 {
-    float timePassed;
-    float jumpTime;
- 
+    float gravityValue;
+    float playerSpeed;
+
+    Vector3 currentVelocity;
+    Vector3 cVelocity;
+
     public SprintJumpState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
     {
         character = _character;
         stateMachine = _stateMachine;
     }
- 
+
     public override void Enter()
     {
         base.Enter();
-        character.animator.applyRootMotion = true;
-        timePassed = 0f;
+        
+        character.animator.applyRootMotion = false; 
         character.animator.SetTrigger("sprintJump");
- 
-        jumpTime = 0.8f;
+        
+        gravityValue = character.gravityValue;
+        playerSpeed = character.sprintSpeed; 
+
+
+        character.playerVelocity.y = Mathf.Sqrt(character.jumpHeight * -2f * gravityValue);
+
+        currentVelocity = new Vector3(character.playerVelocity.x, 0, character.playerVelocity.z);
+        
+        velocity = currentVelocity * 0.7f; 
     }
- 
+
     public override void Exit()
     {
         base.Exit();
-        character.animator.applyRootMotion = false;
     }
- 
+
+    public override void HandleInput()
+    {
+        base.HandleInput();
+
+        // Allow for air control while jumping
+        input = moveAction.ReadValue<Vector2>();
+        velocity = new Vector3(input.x, 0, input.y);
+
+        velocity = velocity.x * character.cameraTransform.right.normalized + velocity.z * character.cameraTransform.forward.normalized;
+        velocity.y = 0f;
+    }
+
     public override void LogicUpdate()
     {
-        
         base.LogicUpdate();
-        if (timePassed> jumpTime)
+        
+        if (character.controller.isGrounded)
         {
-            character.animator.SetTrigger("move");
-            stateMachine.ChangeState(character.sprinting);
+            // Transition to the landing state
+            stateMachine.ChangeState(character.landing);
         }
-        timePassed += Time.deltaTime;
     }
  
- 
- 
+    public override void PhysicsUpdate()
+    {
+        base.PhysicsUpdate();
+
+        character.playerVelocity.y += gravityValue * Time.deltaTime;
+
+        currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
+
+        Vector3 combinedVelocity = (currentVelocity * playerSpeed) + new Vector3(0, character.playerVelocity.y, 0);
+        character.controller.Move(combinedVelocity * Time.deltaTime);
+    }
 }

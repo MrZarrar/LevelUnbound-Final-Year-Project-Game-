@@ -52,7 +52,7 @@ public class HealingState : State
 
         if (!chargeManaAction.IsPressed() || character.healthSystem.IsHealthFull())
         {
-            stateMachine.ChangeState(character.crouching);
+            stateMachine.ChangeState(character.standing);
         }
     }
 
@@ -70,7 +70,7 @@ public class HealingState : State
         }
         else
         {
-            stateMachine.ChangeState(character.crouching);
+            stateMachine.ChangeState(character.standing);
         }
 
         character.animator.SetFloat("speed", input.magnitude, character.speedDampTime, Time.deltaTime);

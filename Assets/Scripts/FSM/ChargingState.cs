@@ -23,6 +23,8 @@ public class ChargingState : State
     {
         base.Enter();
 
+        character.animator.SetBool("isCharging", true);
+
         if (character.chargeVFX != null)
         {
             activeVFX = Object.Instantiate(character.chargeVFX, character.transform);
@@ -90,6 +92,8 @@ public class ChargingState : State
     public override void Exit()
     {
         base.Exit();
+
+        character.animator.SetBool("isCharging", false);
         
         if (activeVFX != null)
         {

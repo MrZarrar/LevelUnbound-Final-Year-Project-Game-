@@ -74,10 +74,7 @@ public class AttackState : State
             clipSpeed = stateInfo.speed;
             clipDuration = clipLength / clipSpeed;
         }
-        else
-        {
-            clipDuration = 0; 
-        }
+
 
         if (timePassed >= clipDuration && attack)
         {
