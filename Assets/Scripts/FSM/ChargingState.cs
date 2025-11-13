@@ -10,6 +10,9 @@ public class ChargingState : State
     float playerSpeed;
     Vector3 cVelocity;
 
+    private float baseManaRegen = 1.0f; 
+    private float bonusManaPerInt = 0.5f;
+
     public ChargingState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
     {
         character = _character;
@@ -53,7 +56,12 @@ public class ChargingState : State
     {
         base.LogicUpdate();
 
-        float regenAmount = 10f; 
+    
+        int intelligenceValue = character.playerStats.intelligence.GetValue();
+
+        //10 INT -> 5 + (10 * 0.5) = 10 Mana per second
+        float regenAmount = baseManaRegen + (intelligenceValue * bonusManaPerInt); 
+        
         character.healthSystem.RegenerateMana(regenAmount * Time.deltaTime);
 
         character.animator.SetFloat("speed", input.magnitude, character.speedDampTime, Time.deltaTime);

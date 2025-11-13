@@ -12,7 +12,7 @@ public class HealingState : State
 
 
     private float healthPerSecond = 10f; // How much HP you heal
-    private float manaCostPerSecond = 20f; // How much mana it costs
+    private float manaCostPerSecond = 30f; // How much mana it costs
 
     public HealingState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)
     {
