@@ -16,6 +16,7 @@ public class Enemy : MonoBehaviour
 
     [SerializeField] private EnemyDamageDealer leftHandDealer;
     [SerializeField] private EnemyDamageDealer rightHandDealer;
+    [SerializeField] private Transform projectileSpawnPoint;
 
     private enum EnemyState { Patrolling, Chasing }
     private EnemyState currentState;
@@ -23,9 +24,15 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float patrolRadius = 20f;
 
 
-    private float attackCD;
     private int XPDrop;
-    private float attackRange;
+    private float meleeAttackCD, meleeAttackRange, meleeWeaponDamage;
+    private float rangedAttackCD, rangedAttackRange, rangedWeaponDamage;
+    private bool hasRangedAttack;
+
+    private float meleeTimePassed;
+    private float rangedTimePassed;
+    private int playerLayer;
+    private Collider ownCollider;
     private float aggroRange;
     private float health;
 
@@ -42,15 +49,28 @@ public class Enemy : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
+        
+        playerLayer = LayerMask.NameToLayer("Player");
+        ownCollider = GetComponent<Collider>();
 
         if (enemyData.spawnVFX != null)
-    {
-        Instantiate(enemyData.spawnVFX, transform.position, transform.rotation);
-    }
+        {
+            Instantiate(enemyData.spawnVFX, transform.position, transform.rotation);
+        }
 
         health = enemyData.health;
-        attackCD = enemyData.attackCD;
-        attackRange = enemyData.attackRange;
+
+        meleeAttackCD = enemyData.meleeAttackCD;
+        meleeAttackRange = enemyData.meleeAttackRange;
+        meleeWeaponDamage = enemyData.meleeWeaponDamage;
+
+    
+        hasRangedAttack = enemyData.hasRangedAttack;
+        rangedAttackCD = enemyData.rangedAttackCD;
+        rangedAttackRange = enemyData.rangedAttackRange;
+        rangedWeaponDamage = enemyData.rangedWeaponDamage;
+
+
         aggroRange = enemyData.aggroRange;
 
         XPDrop = enemyData.XPDrop;
@@ -59,7 +79,7 @@ public class Enemy : MonoBehaviour
 
         foreach (EnemyDamageDealer dealer in allDealers)
         {
-            dealer.SetDamage(enemyData.weaponDamage);
+            dealer.SetDamage(enemyData.meleeWeaponDamage);
         }
 
 
@@ -74,22 +94,17 @@ public class Enemy : MonoBehaviour
     void Update()
     {
         animator.SetFloat("speed", agent.velocity.magnitude / agent.speed);
+        if (player == null) return;
 
-        if (player == null)
-        {
-            return;
-        }
+        meleeTimePassed += Time.deltaTime;
+        rangedTimePassed += Time.deltaTime;
 
-        // Check distance to player
         float distanceToPlayer = Vector3.Distance(player.transform.position, transform.position);
 
-        // If player is in aggro range, switch to Chasing
         if (distanceToPlayer <= aggroRange)
         {
             currentState = EnemyState.Chasing;
         }
-
-        //enemies to "give up" chasing
         else
         {
             currentState = EnemyState.Patrolling;
@@ -98,11 +113,13 @@ public class Enemy : MonoBehaviour
         if (currentState == EnemyState.Chasing)
         {
             agent.speed = enemyData.agentSpeed;
-            HandleChasingAI();
+            agent.stoppingDistance = enemyData.stoppingDistance;
+            HandleChasingAI(distanceToPlayer);
         }
         else 
         {
             agent.speed = enemyData.patrolSpeed;
+            agent.stoppingDistance = 0f;
             HandlePatrollingAI();
         }
     }
@@ -128,26 +145,66 @@ public class Enemy : MonoBehaviour
     }
 
 
-    private void HandleChasingAI()
+    private void HandleChasingAI(float distanceToPlayer)
     {
         transform.LookAt(player.transform);
 
 
-        if (timePassed >= attackCD)
+        //  Check for Melee Attack (Highest Priority)
+        if (distanceToPlayer <= meleeAttackRange)
         {
-            if (agent.remainingDistance <= attackRange)
+            agent.SetDestination(player.transform.position); // Keep pushing
+            
+            if (meleeTimePassed >= meleeAttackCD)
             {
-                animator.SetTrigger("attack");
-                timePassed = 0;
+                animator.SetTrigger("attack"); 
+                meleeTimePassed = 0;
             }
         }
-        timePassed += Time.deltaTime;
+        // Check for Ranged Attack
+        else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
+        {
+            agent.SetDestination(player.transform.position); 
+            
+            if (rangedTimePassed >= rangedAttackCD)
+            {
+                animator.SetTrigger("rangedAttack"); 
+                rangedTimePassed = 0;
+            }
+        }
+        // else just chase
+        else
+        {
+            agent.SetDestination(player.transform.position);
+        }
+    }
+    
 
-        agent.SetDestination(player.transform.position);
+    public void SpawnProjectile()
+    {
+        if (enemyData.projectilePrefab == null) return;
+        
+        Vector3 aimTarget = player.transform.position + Vector3.up * 1f; 
+        Vector3 direction = (aimTarget - projectileSpawnPoint.position).normalized;
+        Quaternion lookRotation = Quaternion.LookRotation(direction);
+        
+        GameObject blast = Instantiate(
+            enemyData.projectilePrefab, 
+            projectileSpawnPoint.position, 
+            lookRotation
+        );
+
+        float damage = rangedWeaponDamage; 
+
+        Projectiles projectileScript = blast.GetComponent<Projectiles>();
+        if (projectileScript != null)
+        {
+            projectileScript.Setup(damage, playerLayer, ownCollider);
+        }
     }
 
 	private void OnCollisionEnter(Collision collision)
-	{
+    {
         if (collision.gameObject.CompareTag("Player"))
         {
             print(true);
@@ -220,7 +277,7 @@ public class Enemy : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireSphere(transform.position, meleeAttackRange);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, aggroRange);
     } 

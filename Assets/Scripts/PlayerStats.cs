@@ -134,7 +134,7 @@ public class PlayerStats : MonoBehaviour
         // Update Swing Speed
         if (animator != null)
         {
-            float agilityBonus = agility.GetValue() * 0.01f;
+            float agilityBonus = agility.GetValue() * 0.005f;
             float totalSwingSpeed = playerWeapon.GetBaseSwingSpeed() + agilityBonus;
             animator.SetFloat("AttackSpeed", totalSwingSpeed);
         }
