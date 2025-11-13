@@ -67,7 +67,15 @@ public class SprintState : State
         }
         if (sprintJump)
         {
-            stateMachine.ChangeState(character.sprintjumping);
+
+            if (character.healthSystem.TryUseStamina(character.jumpStaminaCost))
+            {
+                stateMachine.ChangeState(character.sprintjumping);
+            }
+            else
+            {
+                sprintJump = false;
+            }
         }
     }
 

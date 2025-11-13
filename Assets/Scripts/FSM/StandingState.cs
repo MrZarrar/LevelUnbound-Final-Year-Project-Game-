@@ -7,7 +7,6 @@ public class StandingState: State
     bool crouch;
     Vector3 currentVelocity;
     bool grounded;
-    bool sprint;
     float playerSpeed;
     bool drawWeapon;
     bool rangedAttack;
@@ -28,7 +27,6 @@ public class StandingState: State
 
         jump = false;
         crouch = false;
-        sprint = false;
         drawWeapon = false;
         rangedAttack = false;
         input = Vector2.zero;
@@ -54,10 +52,9 @@ public class StandingState: State
         {
             crouch = true;
         }
-        if (sprintAction.triggered)
-        {
-            sprint = true;
-        }
+
+        input = moveAction.ReadValue<Vector2>();
+
  
         if (drawWeaponAction.triggered)
         {
@@ -85,15 +82,12 @@ public class StandingState: State
         {
             character.healthSystem.RegenerateStamina(character.staminaRegenRate * Time.deltaTime);
         }
+        
 
-        if (sprint)
+       if (sprintAction.IsPressed() && input.magnitude > 0 && character.healthSystem.GetCurrentStamina() > 0)
         {
-            if (input.magnitude > 0 && character.healthSystem.GetCurrentStamina() > 0)
-            { 
-                stateMachine.ChangeState(character.sprinting);
-            }
-
-            sprint = false;
+            stateMachine.ChangeState(character.sprinting);
+            return; 
         }
 
         if (jump)

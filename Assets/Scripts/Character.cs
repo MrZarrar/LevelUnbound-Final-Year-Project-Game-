@@ -8,6 +8,7 @@ public class Character : MonoBehaviour
     public float jumpHeight = 0.8f;
     public float gravityMultiplier = 2;
     public float rotationSpeed = 5f;
+    public float jumpStaminaCost = 15f;
 
     [HideInInspector] public float sprintSpeed = 7.0f;
     [HideInInspector] public float staminaDrainRate = 30f;
