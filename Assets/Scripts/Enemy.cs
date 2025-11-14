@@ -95,6 +95,11 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
+
+        if (isDying) return;
+
+        animator.SetFloat("speed", agent.velocity.magnitude / agent.speed);
+        if (player == null) return;
         animator.SetFloat("speed", agent.velocity.magnitude / agent.speed);
         if (player == null) return;
 
@@ -184,6 +189,9 @@ public class Enemy : MonoBehaviour
 
     public void SpawnProjectile()
     {
+
+        if (isDying) return;
+        
         if (enemyData.projectilePrefab == null) return;
 
         Vector3 aimTarget = player.transform.position + Vector3.up * 1f;
@@ -223,6 +231,12 @@ public class Enemy : MonoBehaviour
         if (GetComponent<Collider>() != null)
         {
             GetComponent<Collider>().enabled = false;
+        }
+
+        EnemyDamageDealer[] allDealers = GetComponentsInChildren<EnemyDamageDealer>();
+        foreach (EnemyDamageDealer dealer in allDealers)
+        {
+            dealer.enabled = false;
         }
 
         StartCoroutine(DeathRoutine());
