@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private Button restartButton;
 
+    [SerializeField] private GameObject loadingPanel;
+
     [SerializeField] private float gameOverDelay = 5f;
 
     void Start()
@@ -43,11 +45,11 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator ShowGameOverScreenRoutine()
     {
-    
+
         yield return new WaitForSeconds(gameOverDelay);
 
         gameOverPanel.SetActive(true);
-        
+
         Time.timeScale = 0f;
 
         Cursor.lockState = CursorLockMode.None;
@@ -60,5 +62,24 @@ public class GameManager : MonoBehaviour
 
         // Reload the entire scene from scratch
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    
+    public void LoadScene(string sceneName)
+    {
+        StartCoroutine(LoadSceneRoutine(sceneName));
+    }
+
+    private IEnumerator LoadSceneRoutine(string sceneName)
+    {
+        Time.timeScale = 1f;
+        
+        loadingPanel.SetActive(true);
+        
+        yield return null; 
+        
+        SceneManager.LoadScene(sceneName);
+
+
+        loadingPanel.SetActive(false);
     }
 }

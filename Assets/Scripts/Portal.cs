@@ -1,10 +1,15 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; 
 
 public class Portal : MonoBehaviour
 {
+
+    public string portalID;
+
     [Header("Destination")]
     [SerializeField] private string sceneToLoad;
+    [SerializeField] private string targetPortalID;
+
+    
 
     [Header("VFX")]
     [SerializeField] private GameObject activationVFX;
@@ -35,8 +40,9 @@ public class Portal : MonoBehaviour
             Instantiate(activationVFX, transform.position, transform.rotation);
         }
 
+        GameManager.instance.LoadScene(sceneToLoad, targetPortalID);
+
 
         Debug.Log("PORTAL: Loading scene: " + sceneToLoad);
-        SceneManager.LoadScene(sceneToLoad);
     }
 }

@@ -18,9 +18,11 @@ public class PlayerPersistence : MonoBehaviour
         else
         {
             // move to duplicate
-            instance.transform.position = transform.position;
-            instance.transform.rotation = transform.rotation;
-            
+            if (GameManager.instance != null)
+            {
+                GameManager.instance.RegisterDefaultSpawn(transform);
+            }
+
             //destroy duplicate
             Destroy(gameObject);
         }
