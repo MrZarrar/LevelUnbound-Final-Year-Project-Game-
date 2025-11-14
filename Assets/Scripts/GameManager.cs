@@ -85,6 +85,8 @@ public class GameManager : MonoBehaviour
     private IEnumerator ShowGameOverScreenRoutine()
     {
 
+        yield return new WaitForSeconds(gameOverDelay);
+        
         Camera overviewCamera = GameObject.FindWithTag("OverviewCamera")?.GetComponent<Camera>();
 
         if (overviewCamera != null)
