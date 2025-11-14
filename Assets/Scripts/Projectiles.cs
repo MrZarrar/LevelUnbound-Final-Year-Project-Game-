@@ -18,7 +18,7 @@ public class Projectiles : MonoBehaviour
     private int playerLayer;
     private int enemyLayer;
 
-    private Collider ownerCollider;
+    private Collider[] ownerColliders;
 
     void Awake()
     {
@@ -27,22 +27,34 @@ public class Projectiles : MonoBehaviour
         GetComponent<Collider>().isTrigger = true;
 
         playerLayer = LayerMask.NameToLayer("Player");
-        enemyLayer = LayerMask.NameToLayer("Enemy");
+        enemyLayer = LayerMask.NameToLayer("EnemyBody"); 
+        if (enemyLayer == -1) // Safety check if "EnemyBody" doesn't exist
+        {
+            Debug.LogError("Projectile script can't find 'EnemyBody' layer. Check layer names.");
+            enemyLayer = LayerMask.NameToLayer("Enemy"); // Fallback
+        }
     }
 
-    public void Setup(float newDamage, int newTargetLayer, Collider owner)
+    public void Setup(float newDamage, int newTargetLayer, Collider[] owners)
     {
         this.damage = newDamage;
         this.targetLayer = newTargetLayer;
-        this.ownerCollider = owner;
+        this.ownerColliders = owners;
     }
 
     void Start()
     {
 
-        if (ownerCollider != null)
+        if (ownerColliders != null)
         {
-            Physics.IgnoreCollision(GetComponent<Collider>(), ownerCollider);
+            Collider myCollider = GetComponent<Collider>();
+            foreach (Collider col in ownerColliders)
+            {
+                if (col != null) // Safety check
+                {
+                    Physics.IgnoreCollision(myCollider, col);
+                }
+            }
         }
 
         rb.linearVelocity = transform.forward * speed;
@@ -56,23 +68,6 @@ public class Projectiles : MonoBehaviour
 
         if (hitLayer == targetLayer)
         {
-            if (hitLayer == enemyLayer)
-            {
-                if (other.TryGetComponent(out Enemy enemy))
-                {
-                    enemy.TakeDamage(damage);
-                    enemy.HitVFX(transform.position);
-                }
-            }
-            else if (hitLayer == playerLayer)
-            {
-                if (other.TryGetComponent(out HealthSystem player))
-                {
-                    player.TakeDamage(damage);
-                    player.HitVFX(transform.position);
-                }
-            }
-
             if (destroyOnHit) DestroyProjectile();
         }
 
@@ -82,6 +77,7 @@ public class Projectiles : MonoBehaviour
             if (destroyOnHit) DestroyProjectile();
         }
         
+
     }
 
     void DestroyProjectile()
