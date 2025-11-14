@@ -20,7 +20,7 @@ public class LandingState:State
         base.Enter();
         timePassed = 0f;
         character.animator.SetTrigger("land");
-        landingTime = 1f; 
+        landingTime = 0.3f; 
 
         currentVelocity = new Vector3(character.playerVelocity.x, 0, character.playerVelocity.z);
         gravityValue = character.gravityValue;

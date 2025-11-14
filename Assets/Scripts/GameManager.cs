@@ -3,14 +3,42 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager instance;
     [Header("UI References")]
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private Button restartButton;
 
+    [SerializeField] private GameObject loadingPanel;
+
     [SerializeField] private float gameOverDelay = 5f;
+
+    public TextMeshProUGUI enemiesLeftText;
+    public TextMeshProUGUI waveCounterText;
+    public TextMeshProUGUI waveAnnouncementText;
+
+    
+
+    private Portal.SpawnTargetType spawnType;
+    private string targetPortalID;
+    private string targetSpawnPointID;
+
+
+    void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
@@ -24,16 +52,22 @@ public class GameManager : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        if(enemiesLeftText != null) enemiesLeftText.text = "";
+        if(waveCounterText != null) waveCounterText.text = "";
+        if(waveAnnouncementText != null) waveAnnouncementText.gameObject.SetActive(false);
     }
 
     private void OnEnable()
     {
         HealthSystem.OnPlayerDied += HandlePlayerDeath;
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     private void OnDisable()
     {
         HealthSystem.OnPlayerDied -= HandlePlayerDeath;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     private void HandlePlayerDeath()
@@ -43,11 +77,11 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator ShowGameOverScreenRoutine()
     {
-    
+
         yield return new WaitForSeconds(gameOverDelay);
 
         gameOverPanel.SetActive(true);
-        
+
         Time.timeScale = 0f;
 
         Cursor.lockState = CursorLockMode.None;
@@ -58,7 +92,113 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        // Reload the entire scene from scratch
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void LoadScene(string sceneName, Portal.SpawnTargetType type, string portalID, string spawnID)
+    {
+        this.spawnType = type;
+        this.targetPortalID = portalID;
+        this.targetSpawnPointID = spawnID;
+        
+        StartCoroutine(LoadSceneRoutine(sceneName));
+    }
+
+    private IEnumerator LoadSceneRoutine(string sceneName)
+    {
+        Time.timeScale = 1f;
+        if(loadingPanel != null) loadingPanel.SetActive(true);
+
+        float startTime = Time.time; 
+
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+
+        while (!asyncLoad.isDone)
+        {
+
+            if (asyncLoad.progress >= 0.9f)
+            {
+                if (Time.time - startTime >= 3.0f)
+                {
+                    asyncLoad.allowSceneActivation = true;
+                }
+            }
+            yield return null; 
+        }
+    }
+
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Transform spawnPoint = FindSpawnPoint();
+
+        if (PlayerPersistence.instance != null)
+        {
+            GameObject player = PlayerPersistence.instance.gameObject;
+
+            CharacterController controller = player.GetComponent<CharacterController>();
+
+            if (controller != null)
+            {
+                controller.enabled = false;
+            }
+
+            player.transform.position = spawnPoint.position;
+            player.transform.rotation = spawnPoint.rotation;
+
+            if (controller != null)
+            {
+                controller.enabled = true;
+            }
+        }
+
+        if (spawnType == Portal.SpawnTargetType.PortalID && !string.IsNullOrEmpty(targetPortalID))
+        {
+            Portal[] portals = FindObjectsByType<Portal>(FindObjectsSortMode.None);
+            foreach (Portal portal in portals)
+            {
+                if (portal.portalID == targetPortalID)
+                {
+                    portal.StartCooldown(10f);
+                    break;
+                }
+            }
+        }
+
+        targetPortalID = null;
+        targetSpawnPointID = null;
+        
+        if(loadingPanel != null) loadingPanel.SetActive(false);
+    }
+
+    private Transform FindSpawnPoint()
+    {
+        if (spawnType == Portal.SpawnTargetType.PortalID && !string.IsNullOrEmpty(targetPortalID))
+        {
+            Portal[] portals = FindObjectsByType<Portal>(FindObjectsSortMode.None);
+            foreach (Portal portal in portals)
+            {
+                if (portal.portalID == targetPortalID)
+                {
+                    return portal.transform; 
+                }
+            }
+            Debug.LogWarning("Portal target '" + targetPortalID + "' not found! Spawning at 0,0,0.");
+        }
+        else if (spawnType == Portal.SpawnTargetType.SpawnPointID && !string.IsNullOrEmpty(targetSpawnPointID))
+        {
+            SpawnPoint[] spawners = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None);
+            foreach (SpawnPoint spawn in spawners)
+            {
+                if (spawn.spawnPointID == targetSpawnPointID)
+                {
+                    return spawn.transform; 
+                }
+            }
+            Debug.LogWarning("SpawnPoint target '" + targetSpawnPointID + "' not found! Spawning at 0,0,0.");
+        }
+
+        Debug.LogError("No valid spawn point found! Spawning at world origin (0, 0, 0).");
+        return new GameObject("TempSpawn").transform; 
     }
 }

@@ -10,7 +10,7 @@ public class ChargingState : State
     float playerSpeed;
     Vector3 cVelocity;
 
-    private float baseManaRegen = 1.0f; 
+    private float baseManaRegen = 2.0f; 
     private float bonusManaPerInt = 0.5f;
 
     public ChargingState(Character _character, StateMachine _stateMachine) : base(_character, _stateMachine)

@@ -11,6 +11,7 @@ public class WaveSpawner : MonoBehaviour
 
     [SerializeField] private GameObject exitPortalPrefab;
     [SerializeField] private Transform exitPortalSpawnPoint;
+    [SerializeField] private float portalSpawnHeightOffset = 2f;
 
     [Header("Boss Config")]
     [SerializeField] private GameObject bossPrefab;
@@ -22,12 +23,12 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private float minionSpawnInterval = 3f;
 
 
-    [Header("UI")]
-    [SerializeField] private TextMeshProUGUI enemiesLeftText;
-    [SerializeField] private TextMeshProUGUI waveCounterText;
 
-    [SerializeField] private TextMeshProUGUI waveAnnouncementText;
     [SerializeField] private float announcementDuration = 2.5f;
+
+    private TextMeshProUGUI enemiesLeftText;
+    private TextMeshProUGUI waveCounterText;
+    private TextMeshProUGUI waveAnnouncementText;
 
     private int currentWaveIndex = 0;
     private int enemiesLeftInWave;
@@ -41,10 +42,52 @@ public class WaveSpawner : MonoBehaviour
     private void OnDisable()
     {
         Enemy.OnEnemyDied -= HandleEnemyDied;
+
+        if (GameManager.instance != null)
+        {
+            if (enemiesLeftText != null)
+            {
+                enemiesLeftText.text = ""; 
+                enemiesLeftText.gameObject.SetActive(false); 
+            }
+            if (waveCounterText != null)
+            {
+                waveCounterText.text = ""; 
+                waveCounterText.gameObject.SetActive(false); 
+            }
+            
+            if (waveAnnouncementText != null)
+            {
+                waveAnnouncementText.gameObject.SetActive(false);
+            }
+        }
     }
 
     void Start()
     {
+
+        if (GameManager.instance != null)
+        {
+            enemiesLeftText = GameManager.instance.enemiesLeftText;
+            waveCounterText = GameManager.instance.waveCounterText;
+            waveAnnouncementText = GameManager.instance.waveAnnouncementText;
+        }
+        else
+        {
+            Debug.LogError("WaveSpawner could not find GameManager! UI will not work.");
+            // We can return here to prevent a crash
+            return;
+        }
+
+        if (enemiesLeftText != null)
+        {
+            enemiesLeftText.gameObject.SetActive(true);
+        }
+        if (waveCounterText != null)
+        {
+            waveCounterText.gameObject.SetActive(true);
+        }
+
         StartWave(currentWaveIndex);
     }
 
@@ -200,7 +243,9 @@ public class WaveSpawner : MonoBehaviour
         if (exitPortalPrefab == null) return;
         
         Transform spawnPoint = exitPortalSpawnPoint != null ? exitPortalSpawnPoint : bossSpawnPoint;
+
+        Vector3 spawnPosition = spawnPoint.position + (Vector3.up * portalSpawnHeightOffset);
         
-        Instantiate(exitPortalPrefab, spawnPoint.position, Quaternion.identity);
+        Instantiate(exitPortalPrefab, spawnPosition, Quaternion.identity);
     }
 }
