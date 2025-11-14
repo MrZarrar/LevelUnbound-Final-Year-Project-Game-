@@ -83,6 +83,17 @@ public class GameManager : MonoBehaviour
     private IEnumerator ShowGameOverScreenRoutine()
     {
 
+        Camera overviewCamera = GameObject.FindWithTag("OverviewCamera")?.GetComponent<Camera>();
+
+        if (overviewCamera != null)
+        {
+            overviewCamera.gameObject.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: No 'OverviewCamera' found. Can't switch camera on death.");
+        }
+
         yield return new WaitForSeconds(gameOverDelay);
 
         gameOverPanel.SetActive(true);
