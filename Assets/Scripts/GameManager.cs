@@ -16,6 +16,9 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private float gameOverDelay = 5f;
 
+    [SerializeField] private TextMeshProUGUI dungeonTitleText;
+    [SerializeField] private float dungeonIntroDuration = 3f;
+
     public TextMeshProUGUI enemiesLeftText;
     public TextMeshProUGUI waveCounterText;
     public TextMeshProUGUI waveAnnouncementText;
@@ -53,9 +56,11 @@ public class GameManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
-        if(enemiesLeftText != null) enemiesLeftText.text = "";
-        if(waveCounterText != null) waveCounterText.text = "";
-        if(waveAnnouncementText != null) waveAnnouncementText.gameObject.SetActive(false);
+        if (enemiesLeftText != null) enemiesLeftText.text = "";
+        if (waveCounterText != null) waveCounterText.text = "";
+        if (waveAnnouncementText != null) waveAnnouncementText.gameObject.SetActive(false);
+        
+        if(dungeonTitleText != null) dungeonTitleText.gameObject.SetActive(false);
     }
 
     private void OnEnable()
@@ -167,8 +172,44 @@ public class GameManager : MonoBehaviour
 
         targetPortalID = null;
         targetSpawnPointID = null;
+
+        if (loadingPanel != null) loadingPanel.SetActive(false);
         
-        if(loadingPanel != null) loadingPanel.SetActive(false);
+
+        if (scene.name != "Village")
+        {
+            StartCoroutine(DungeonIntroSequence());
+        }
+    }
+    
+    private IEnumerator DungeonIntroSequence()
+    {
+        // Find the cameras
+        GameObject playerCamObject = PlayerPersistence.instance.GetComponentInChildren<Camera>().gameObject;
+        Camera overviewCamera = GameObject.FindWithTag("OverviewCamera")?.GetComponent<Camera>();
+
+        // Switch cameras
+        if (playerCamObject != null) playerCamObject.SetActive(false);
+        if (overviewCamera != null) overviewCamera.gameObject.SetActive(true);
+        if (dungeonTitleText != null) dungeonTitleText.gameObject.SetActive(true);
+
+        // Wait
+        yield return new WaitForSeconds(dungeonIntroDuration);
+
+        // Switch cameras back
+        if (dungeonTitleText != null) dungeonTitleText.gameObject.SetActive(false);
+        if (overviewCamera != null) overviewCamera.gameObject.SetActive(false);
+        if (playerCamObject != null) playerCamObject.SetActive(true);
+        
+        WaveSpawner spawner = FindAnyObjectByType<WaveSpawner>();
+        if (spawner != null)
+        {
+            spawner.BeginSpawning();
+        }
+        else
+        {
+            Debug.LogError("Dungeon Intro finished, but no WaveSpawner was found!");
+        }
     }
 
     private Transform FindSpawnPoint()
@@ -180,7 +221,7 @@ public class GameManager : MonoBehaviour
             {
                 if (portal.portalID == targetPortalID)
                 {
-                    return portal.transform; 
+                    return portal.transform;
                 }
             }
             Debug.LogWarning("Portal target '" + targetPortalID + "' not found! Spawning at 0,0,0.");
@@ -192,13 +233,13 @@ public class GameManager : MonoBehaviour
             {
                 if (spawn.spawnPointID == targetSpawnPointID)
                 {
-                    return spawn.transform; 
+                    return spawn.transform;
                 }
             }
             Debug.LogWarning("SpawnPoint target '" + targetSpawnPointID + "' not found! Spawning at 0,0,0.");
         }
 
         Debug.LogError("No valid spawn point found! Spawning at world origin (0, 0, 0).");
-        return new GameObject("TempSpawn").transform; 
+        return new GameObject("TempSpawn").transform;
     }
 }
