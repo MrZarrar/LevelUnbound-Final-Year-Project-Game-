@@ -88,6 +88,10 @@ public class WaveSpawner : MonoBehaviour
             waveCounterText.gameObject.SetActive(true);
         }
 
+    }
+
+    public void BeginSpawning()
+    {
         StartWave(currentWaveIndex);
     }
 
