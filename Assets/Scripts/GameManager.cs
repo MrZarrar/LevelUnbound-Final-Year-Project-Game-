@@ -150,7 +150,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-    oid OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (PlayerPersistence.instance != null)
         {
