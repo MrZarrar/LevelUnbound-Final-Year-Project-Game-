@@ -22,8 +22,9 @@ public class GameManager : MonoBehaviour
 
     
 
+    private Portal.SpawnTargetType spawnType;
     private string targetPortalID;
-    private Transform defaultSpawnPoint;
+    private string targetSpawnPointID;
 
 
     void Awake()
@@ -91,53 +92,75 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        // Reload the entire scene from scratch
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    public void LoadScene(string sceneName, string portalID)
+    public void LoadScene(string sceneName, Portal.SpawnTargetType type, string portalID, string spawnID)
     {
+        this.spawnType = type;
         this.targetPortalID = portalID;
+        this.targetSpawnPointID = spawnID;
+        
         StartCoroutine(LoadSceneRoutine(sceneName));
     }
 
     private IEnumerator LoadSceneRoutine(string sceneName)
     {
         Time.timeScale = 1f;
+        if(loadingPanel != null) loadingPanel.SetActive(true);
 
-        loadingPanel.SetActive(true);
+        float startTime = Time.time; 
 
-        yield return null;
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
 
-        SceneManager.LoadScene(sceneName);
+        while (!asyncLoad.isDone)
+        {
 
-
-        loadingPanel.SetActive(false);
+            if (asyncLoad.progress >= 0.9f)
+            {
+                if (Time.time - startTime >= 3.0f)
+                {
+                    asyncLoad.allowSceneActivation = true;
+                }
+            }
+            yield return null; 
+        }
     }
 
-    public void RegisterDefaultSpawn(Transform spawn)
-    {
-        defaultSpawnPoint = spawn;
-    }
-    
+
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         Transform spawnPoint = FindSpawnPoint();
 
         if (PlayerPersistence.instance != null)
         {
-            PlayerPersistence.instance.transform.position = spawnPoint.position;
-            PlayerPersistence.instance.transform.rotation = spawnPoint.rotation;
+            GameObject player = PlayerPersistence.instance.gameObject;
+
+            CharacterController controller = player.GetComponent<CharacterController>();
+
+            if (controller != null)
+            {
+                controller.enabled = false;
+            }
+
+            player.transform.position = spawnPoint.position;
+            player.transform.rotation = spawnPoint.rotation;
+
+            if (controller != null)
+            {
+                controller.enabled = true;
+            }
         }
-        
+
         targetPortalID = null;
-        defaultSpawnPoint = null;
+        targetSpawnPointID = null;
+        
+        if(loadingPanel != null) loadingPanel.SetActive(false);
     }
 
     private Transform FindSpawnPoint()
     {
-        // Try to find the portal ID
-        if (!string.IsNullOrEmpty(targetPortalID))
+        if (spawnType == Portal.SpawnTargetType.PortalID && !string.IsNullOrEmpty(targetPortalID))
         {
             Portal[] portals = FindObjectsByType<Portal>(FindObjectsSortMode.None);
             foreach (Portal portal in portals)
@@ -147,17 +170,22 @@ public class GameManager : MonoBehaviour
                     return portal.transform; 
                 }
             }
-            Debug.LogWarning("Portal target '" + targetPortalID + "' not found! Using default spawn.");
+            Debug.LogWarning("Portal target '" + targetPortalID + "' not found! Spawning at 0,0,0.");
+        }
+        else if (spawnType == Portal.SpawnTargetType.SpawnPointID && !string.IsNullOrEmpty(targetSpawnPointID))
+        {
+            SpawnPoint[] spawners = FindObjectsByType<SpawnPoint>(FindObjectsSortMode.None);
+            foreach (SpawnPoint spawn in spawners)
+            {
+                if (spawn.spawnPointID == targetSpawnPointID)
+                {
+                    return spawn.transform; 
+                }
+            }
+            Debug.LogWarning("SpawnPoint target '" + targetSpawnPointID + "' not found! Spawning at 0,0,0.");
         }
 
-        // If no ID, use the "dummy" player's default spawn
-        if (defaultSpawnPoint != null)
-        {
-            return defaultSpawnPoint;
-        }
-        
-        // If all else fails, just return the player's current spot
-        Debug.LogError("No spawn point found! Player will spawn in place.");
-        return PlayerPersistence.instance.transform;
+        Debug.LogError("No valid spawn point found! Spawning at world origin (0, 0, 0).");
+        return new GameObject("TempSpawn").transform; 
     }
 }

@@ -42,6 +42,25 @@ public class WaveSpawner : MonoBehaviour
     private void OnDisable()
     {
         Enemy.OnEnemyDied -= HandleEnemyDied;
+
+        if (GameManager.instance != null)
+        {
+            if (enemiesLeftText != null)
+            {
+                enemiesLeftText.text = ""; 
+                enemiesLeftText.gameObject.SetActive(false); 
+            }
+            if (waveCounterText != null)
+            {
+                waveCounterText.text = ""; 
+                waveCounterText.gameObject.SetActive(false); 
+            }
+            
+            if (waveAnnouncementText != null)
+            {
+                waveAnnouncementText.gameObject.SetActive(false);
+            }
+        }
     }
 
     void Start()
@@ -59,7 +78,16 @@ public class WaveSpawner : MonoBehaviour
             // We can return here to prevent a crash
             return;
         }
-        
+
+        if (enemiesLeftText != null)
+        {
+            enemiesLeftText.gameObject.SetActive(true);
+        }
+        if (waveCounterText != null)
+        {
+            waveCounterText.gameObject.SetActive(true);
+        }
+
         StartWave(currentWaveIndex);
     }
 

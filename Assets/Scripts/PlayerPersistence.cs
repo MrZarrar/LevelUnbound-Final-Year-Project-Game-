@@ -17,12 +17,6 @@ public class PlayerPersistence : MonoBehaviour
         }
         else
         {
-            // move to duplicate
-            if (GameManager.instance != null)
-            {
-                GameManager.instance.RegisterDefaultSpawn(transform);
-            }
-
             //destroy duplicate
             Destroy(gameObject);
         }

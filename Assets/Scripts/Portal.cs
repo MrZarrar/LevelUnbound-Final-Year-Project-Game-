@@ -2,12 +2,20 @@ using UnityEngine;
 
 public class Portal : MonoBehaviour
 {
-
+    public enum SpawnTargetType
+    {
+        PortalID,     
+        SpawnPointID  
+    }
     public string portalID;
-
-    [Header("Destination")]
     [SerializeField] private string sceneToLoad;
+
+    [SerializeField] private SpawnTargetType spawnType;
+    
     [SerializeField] private string targetPortalID;
+    
+    [SerializeField] private string targetSpawnPointID;
+
 
     
 
@@ -40,7 +48,7 @@ public class Portal : MonoBehaviour
             Instantiate(activationVFX, transform.position, transform.rotation);
         }
 
-        GameManager.instance.LoadScene(sceneToLoad, targetPortalID);
+        GameManager.instance.LoadScene(sceneToLoad, spawnType, targetPortalID, targetSpawnPointID);
 
 
         Debug.Log("PORTAL: Loading scene: " + sceneToLoad);
