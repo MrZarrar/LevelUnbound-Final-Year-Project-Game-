@@ -11,6 +11,7 @@ public class WaveSpawner : MonoBehaviour
 
     [SerializeField] private GameObject exitPortalPrefab;
     [SerializeField] private Transform exitPortalSpawnPoint;
+    [SerializeField] private float portalSpawnHeightOffset = 2f;
 
     [Header("Boss Config")]
     [SerializeField] private GameObject bossPrefab;
@@ -200,7 +201,9 @@ public class WaveSpawner : MonoBehaviour
         if (exitPortalPrefab == null) return;
         
         Transform spawnPoint = exitPortalSpawnPoint != null ? exitPortalSpawnPoint : bossSpawnPoint;
+
+        Vector3 spawnPosition = spawnPoint.position + (Vector3.up * portalSpawnHeightOffset);
         
-        Instantiate(exitPortalPrefab, spawnPoint.position, Quaternion.identity);
+        Instantiate(exitPortalPrefab, spawnPosition, Quaternion.identity);
     }
 }
