@@ -9,6 +9,7 @@ public class HealthSystem : MonoBehaviour
 {
 
     public static event Action OnPlayerDied;
+
     private float maxHealth;
     private float maxMana;
     private float maxStamina;
@@ -27,6 +28,8 @@ public class HealthSystem : MonoBehaviour
     [SerializeField] GameObject ragdoll;
 
     Animator animator;
+
+    private bool isDying = false;
 
     void Start()
     {
@@ -127,22 +130,39 @@ public class HealthSystem : MonoBehaviour
         return currentHealth >= maxHealth;
     }
 
+    public void FullHeal()
+    {
+        currentHealth = maxHealth;
+        currentMana = maxMana;
+        currentStamina = maxStamina;
+        
+        if (playerHealthBar != null) playerHealthBar.SetHP((int)currentHealth);
+        if (playerManaBar != null) playerManaBar.SetMana((int)currentMana);
+        if (playerStaminaBar != null) playerStaminaBar.SetStamina(currentStamina);
+    }
+
 
     public void TakeDamage(float damageAmount)
     {
+        if (isDying) return;
         currentHealth -= damageAmount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         animator.SetTrigger("damage");
 
         if (playerHealthBar != null) playerHealthBar.SetHP((int)currentHealth);
-        if (currentHealth <= 0) Die();
+        if (currentHealth <= 0 && isDying)
+        {
+            isDying = true;
+            Die();
+
+        }  
     }
 
     void Die()
     {
         Instantiate(ragdoll, transform.position, transform.rotation);
-        Destroy(this.gameObject);
         OnPlayerDied?.Invoke();
+        gameObject.SetActive(false);
     }
 
     public void HitVFX(Vector3 hitPoint)
