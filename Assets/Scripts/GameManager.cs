@@ -87,7 +87,7 @@ public class GameManager : MonoBehaviour
 
         if (overviewCamera != null)
         {
-            overviewCamera.gameObject.SetActive(true);
+            overviewCamera.enabled = true;
         }
         else
         {
@@ -106,9 +106,7 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        Time.timeScale = 1f;
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        StartCoroutine(LoadSceneRoutine(SceneManager.GetActiveScene().name));
     }
 
     public void LoadScene(string sceneName, Portal.SpawnTargetType type, string portalID, string spawnID)
@@ -148,7 +146,12 @@ public class GameManager : MonoBehaviour
     {
         Transform spawnPoint = FindSpawnPoint();
 
-        if (PlayerPersistence.instance != null)
+        if (spawnPoint == null)
+        {
+            Debug.LogError("SpawnPoint was null, player will not be moved.");
+        }
+
+        else if (PlayerPersistence.instance != null)
         {
             GameObject player = PlayerPersistence.instance.gameObject;
 
@@ -201,7 +204,7 @@ public class GameManager : MonoBehaviour
 
         // Switch cameras
         if (playerCamObject != null) playerCamObject.SetActive(false);
-        if (overviewCamera != null) overviewCamera.gameObject.SetActive(true);
+        if (overviewCamera != null) overviewCamera.enabled = true;
         if (dungeonTitleText != null) dungeonTitleText.gameObject.SetActive(true);
 
         // Wait
@@ -209,7 +212,7 @@ public class GameManager : MonoBehaviour
 
         // Switch cameras back
         if (dungeonTitleText != null) dungeonTitleText.gameObject.SetActive(false);
-        if (overviewCamera != null) overviewCamera.gameObject.SetActive(false);
+        if (overviewCamera != null) overviewCamera.enabled = false;
         if (playerCamObject != null) playerCamObject.SetActive(true);
         
         WaveSpawner spawner = FindAnyObjectByType<WaveSpawner>();
@@ -251,6 +254,6 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.LogError("No valid spawn point found! Spawning at world origin (0, 0, 0).");
-        return new GameObject("TempSpawn").transform;
+        return null;
     }
 }
