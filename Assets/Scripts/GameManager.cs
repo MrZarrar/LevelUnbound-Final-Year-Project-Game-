@@ -152,6 +152,19 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        if (spawnType == Portal.SpawnTargetType.PortalID && !string.IsNullOrEmpty(targetPortalID))
+        {
+            Portal[] portals = FindObjectsByType<Portal>(FindObjectsSortMode.None);
+            foreach (Portal portal in portals)
+            {
+                if (portal.portalID == targetPortalID)
+                {
+                    portal.StartCooldown(10f);
+                    break;
+                }
+            }
+        }
+
         targetPortalID = null;
         targetSpawnPointID = null;
         
