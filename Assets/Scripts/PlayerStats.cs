@@ -10,6 +10,21 @@ public class Stat
     public int GetValue() { return baseValue; }
 }
 
+
+[System.Serializable]
+public class PlayerStatData
+{
+    public int level;
+    public int currentXP;
+    public int xpToNextLevel;
+    public int strength;
+    public int agility;
+    public int intelligence;
+    public int vitality;
+
+
+}
+
 public class PlayerStats : MonoBehaviour
 
 
@@ -56,6 +71,42 @@ public class PlayerStats : MonoBehaviour
     public Stat vitality;
 
     private int enemyLayer;
+
+
+    public void SaveStats(GameManager gm)
+    {
+        PlayerStatData data = new PlayerStatData();
+        data.level = this.level;
+        data.currentXP = this.currentXP;
+        data.xpToNextLevel = this.xpToNextLevel;
+        data.strength = this.strength.baseValue;
+        data.agility = this.agility.baseValue;
+        data.intelligence = this.intelligence.baseValue;
+        data.vitality = this.vitality.baseValue;
+        
+        gm.StoreSavedStats(data);
+        Debug.Log("PLAYER STATS SAVED.");
+    }
+
+    public void LoadStats(PlayerStatData data)
+    {
+        this.level = data.level;
+        this.currentXP = data.currentXP;
+        this.xpToNextLevel = data.xpToNextLevel;
+        this.strength.baseValue = data.strength;
+        this.agility.baseValue = data.agility;
+        this.intelligence.baseValue = data.intelligence;
+        this.vitality.baseValue = data.vitality;
+        
+        UpdateAllStats(); 
+        
+        if (xpBar != null)
+        {
+            xpBar.SetLevel(this.level, this.currentXP, this.xpToNextLevel);
+        }
+        
+        Debug.Log("PLAYER STATS LOADED.");
+    }
 
     void Awake()
     {
@@ -120,15 +171,15 @@ public class PlayerStats : MonoBehaviour
 
     private void UpdateMovementStats()
     {
-        if (character == null) return; 
+        if (character == null) return;
 
         int agi = agility.GetValue();
 
         float totalSprintSpeed = baseSprintSpeed + (agi * agiSprintBonus);
         float totalStaminaRegen = baseStaminaRegen + (agi * agiRegenBonus);
-        
+
         float totalStaminaDrain = baseStaminaDrain - (agi * agiDrainReduction);
-        
+
         totalStaminaDrain = Mathf.Max(totalStaminaDrain, minStaminaDrain);
 
         character.SetMovementStats(totalSprintSpeed, totalStaminaRegen, totalStaminaDrain);
@@ -174,7 +225,7 @@ public class PlayerStats : MonoBehaviour
         playerWeapon = newWeapon;
         UpdateWeaponStats();
     }
-    
+
     public void CastManaBlast()
     {
         if (manaBlastPrefab == null)
@@ -186,14 +237,14 @@ public class PlayerStats : MonoBehaviour
         if (!healthSystem.TryUseMana(manaCost))
         {
             Debug.Log("Not enough mana to cast!");
-            return; 
+            return;
         }
 
         Vector3 targetPoint;
 
         Ray ray = Camera.main.ScreenPointToRay(reticleRectTransform.position);
 
-        
+
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, aimLayerMask))
         {
             targetPoint = hit.point;
@@ -207,20 +258,20 @@ public class PlayerStats : MonoBehaviour
         Quaternion lookRotation = Quaternion.LookRotation(direction);
 
         GameObject blast = Instantiate(
-            manaBlastPrefab, 
-            projectileSpawnPoint.position, 
-            lookRotation 
+            manaBlastPrefab,
+            projectileSpawnPoint.position,
+            lookRotation
         );
 
-        float baseSpellDamage = 5f; 
-        float intelligenceMultiplier = 1.0f + (intelligence.GetValue() * 0.1f); 
+        float baseSpellDamage = 5f;
+        float intelligenceMultiplier = 1.0f + (intelligence.GetValue() * 0.1f);
 
         float damage = baseSpellDamage * intelligenceMultiplier;
 
         Projectiles projectileScript = blast.GetComponent<Projectiles>();
         if (projectileScript != null)
         {
-            
+
             projectileScript.Setup(damage, enemyLayer, GetComponent<CharacterController>());
         }
     }

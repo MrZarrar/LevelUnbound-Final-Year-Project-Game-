@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
     private string targetPortalID;
     private string targetSpawnPointID;
 
+    private PlayerStatData savedStats;
+
 
     void Awake()
     {
@@ -104,9 +106,15 @@ public class GameManager : MonoBehaviour
         Cursor.visible = true;
     }
 
+    public void StoreSavedStats(PlayerStatData data)
+    {
+        savedStats = data;
+    }
+
     public void RestartGame()
     {
         StartCoroutine(LoadSceneRoutine(SceneManager.GetActiveScene().name));
+        
     }
 
     public void LoadScene(string sceneName, Portal.SpawnTargetType type, string portalID, string spawnID)
@@ -144,33 +152,37 @@ public class GameManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Transform spawnPoint = FindSpawnPoint();
-
-        if (spawnPoint == null)
+        if (PlayerPersistence.instance != null)
         {
-            Debug.LogError("SpawnPoint was null, player will not be moved.");
-        }
+            PlayerPersistence.instance.gameObject.SetActive(true);
 
-        else if (PlayerPersistence.instance != null)
-        {
-            GameObject player = PlayerPersistence.instance.gameObject;
-
-            CharacterController controller = player.GetComponent<CharacterController>();
-
-            if (controller != null)
+            Transform spawnPoint = FindSpawnPoint();
+            
+            if (spawnPoint != null)
             {
-                controller.enabled = false;
+                GameObject player = PlayerPersistence.instance.gameObject;
+                CharacterController controller = player.GetComponent<CharacterController>();
+                
+                if (controller != null) controller.enabled = false;
+                player.transform.position = spawnPoint.position;
+                player.transform.rotation = spawnPoint.rotation;
+                if (controller != null) controller.enabled = true;
             }
+            
+            PlayerStats playerStats = PlayerPersistence.instance.GetComponent<PlayerStats>();
+            HealthSystem healthSystem = PlayerPersistence.instance.GetComponent<HealthSystem>();
 
-            player.transform.position = spawnPoint.position;
-            player.transform.rotation = spawnPoint.rotation;
-
-            if (controller != null)
+            if (scene.name == "Village") 
             {
-                controller.enabled = true;
+                playerStats.SaveStats(this);
+            }
+            else if (savedStats != null) 
+            {
+                playerStats.LoadStats(savedStats);
+                healthSystem.FullHeal();
             }
         }
-
+        
         if (spawnType == Portal.SpawnTargetType.PortalID && !string.IsNullOrEmpty(targetPortalID))
         {
             Portal[] portals = FindObjectsByType<Portal>(FindObjectsSortMode.None);
@@ -186,10 +198,9 @@ public class GameManager : MonoBehaviour
 
         targetPortalID = null;
         targetSpawnPointID = null;
-
-        if (loadingPanel != null) loadingPanel.SetActive(false);
         
-
+        if(loadingPanel != null) loadingPanel.SetActive(false);
+        
         if (scene.name != "Village")
         {
             StartCoroutine(DungeonIntroSequence());
