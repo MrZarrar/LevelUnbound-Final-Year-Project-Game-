@@ -57,12 +57,15 @@ public class PlayerStats : MonoBehaviour
 
     private int enemyLayer;
 
+    private Collider[] allPlayerColliders;
+
     void Awake()
     {
         if (healthSystem == null) healthSystem = GetComponent<HealthSystem>();
 
         animator = GetComponent<Animator>();
         character = GetComponent<Character>();
+        allPlayerColliders = GetComponentsInChildren<Collider>();
 
 
         UpdateAllStats();
@@ -220,8 +223,8 @@ public class PlayerStats : MonoBehaviour
         Projectiles projectileScript = blast.GetComponent<Projectiles>();
         if (projectileScript != null)
         {
-            
-            projectileScript.Setup(damage, enemyLayer, GetComponent<CharacterController>());
+
+            projectileScript.Setup(damage, enemyLayer, allPlayerColliders);
         }
     }
 }
