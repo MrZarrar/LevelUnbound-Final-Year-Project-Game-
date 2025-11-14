@@ -27,6 +27,8 @@ public class HealthSystem : MonoBehaviour
     [SerializeField] GameObject hitVFX;
     [SerializeField] GameObject ragdoll;
 
+    public GameObject playerSkin;
+
     Animator animator;
 
     private bool isDying = false;
@@ -161,9 +163,25 @@ public class HealthSystem : MonoBehaviour
     void Die()
     {
         Instantiate(ragdoll, transform.position, transform.rotation);
+
         OnPlayerDied?.Invoke();
-        Debug.Log("Player Died!");
-        gameObject.SetActive(false);
+
+        CharacterController controller = GetComponent<CharacterController>();
+        if (controller != null)
+            controller.enabled = false;
+
+        Character character = GetComponent<Character>();
+        if (character != null)
+            character.enabled = false; 
+
+        if (playerSkin != null)
+        {
+            playerSkin.SetActive(false);
+        }
+        else
+        {
+            Debug.LogError("Player 'Skin' is not assigned in HealthSystem's Inspector!");
+        }
     }
 
     public void HitVFX(Vector3 hitPoint)

@@ -98,7 +98,6 @@ public class GameManager : MonoBehaviour
             Debug.LogWarning("GameManager: No 'OverviewCamera' found. Can't switch camera on death.");
         }
 
-        yield return new WaitForSeconds(gameOverDelay);
 
         gameOverPanel.SetActive(true);
 
@@ -162,24 +161,31 @@ public class GameManager : MonoBehaviour
     {
         if (PlayerPersistence.instance != null)
         {
-            PlayerPersistence.instance.gameObject.SetActive(true);
+            GameObject player = PlayerPersistence.instance.gameObject;
+
+            CharacterController controller = player.GetComponent<CharacterController>();
+            if (controller != null) controller.enabled = true;
+            
+            Character character = player.GetComponent<Character>();
+            if (character != null) character.enabled = true;
+
+            HealthSystem health = player.GetComponent<HealthSystem>();
+            if (health != null && health.playerSkin != null)
+            {
+                health.playerSkin.SetActive(true);
+            }
 
             Transform spawnPoint = FindSpawnPoint();
             
             if (spawnPoint != null)
             {
-                GameObject player = PlayerPersistence.instance.gameObject;
-                CharacterController controller = player.GetComponent<CharacterController>();
-                
                 if (controller != null) controller.enabled = false;
                 player.transform.position = spawnPoint.position;
                 player.transform.rotation = spawnPoint.rotation;
                 if (controller != null) controller.enabled = true;
             }
             
-            PlayerStats playerStats = PlayerPersistence.instance.GetComponent<PlayerStats>();
-            HealthSystem healthSystem = PlayerPersistence.instance.GetComponent<HealthSystem>();
-
+            PlayerStats playerStats = player.GetComponent<PlayerStats>();
             if (scene.name == "Village") 
             {
                 playerStats.SaveStats(this);
@@ -187,7 +193,7 @@ public class GameManager : MonoBehaviour
             else if (savedStats != null) 
             {
                 playerStats.LoadStats(savedStats);
-                healthSystem.FullHeal();
+                health.FullHeal();
             }
         }
         
@@ -208,6 +214,9 @@ public class GameManager : MonoBehaviour
         targetSpawnPointID = null;
         
         if(loadingPanel != null) loadingPanel.SetActive(false);
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
         
         if (scene.name != "Village")
         {
