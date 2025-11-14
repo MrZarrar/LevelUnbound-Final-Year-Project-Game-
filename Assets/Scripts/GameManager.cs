@@ -85,6 +85,8 @@ public class GameManager : MonoBehaviour
     private IEnumerator ShowGameOverScreenRoutine()
     {
 
+        yield return new WaitForSeconds(gameOverDelay);
+
         Camera overviewCamera = GameObject.FindWithTag("OverviewCamera")?.GetComponent<Camera>();
 
         if (overviewCamera != null)
@@ -113,6 +115,12 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+        
         StartCoroutine(LoadSceneRoutine(SceneManager.GetActiveScene().name));
         
     }
