@@ -23,12 +23,12 @@ public class WaveSpawner : MonoBehaviour
     [SerializeField] private float minionSpawnInterval = 3f;
 
 
-    [Header("UI")]
-    [SerializeField] private TextMeshProUGUI enemiesLeftText;
-    [SerializeField] private TextMeshProUGUI waveCounterText;
 
-    [SerializeField] private TextMeshProUGUI waveAnnouncementText;
     [SerializeField] private float announcementDuration = 2.5f;
+
+    private TextMeshProUGUI enemiesLeftText;
+    private TextMeshProUGUI waveCounterText;
+    private TextMeshProUGUI waveAnnouncementText;
 
     private int currentWaveIndex = 0;
     private int enemiesLeftInWave;
@@ -46,6 +46,20 @@ public class WaveSpawner : MonoBehaviour
 
     void Start()
     {
+
+        if (GameManager.instance != null)
+        {
+            enemiesLeftText = GameManager.instance.enemiesLeftText;
+            waveCounterText = GameManager.instance.waveCounterText;
+            waveAnnouncementText = GameManager.instance.waveAnnouncementText;
+        }
+        else
+        {
+            Debug.LogError("WaveSpawner could not find GameManager! UI will not work.");
+            // We can return here to prevent a crash
+            return;
+        }
+        
         StartWave(currentWaveIndex);
     }
 

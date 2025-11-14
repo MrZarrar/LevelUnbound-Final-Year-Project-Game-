@@ -3,9 +3,11 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager instance;
     [Header("UI References")]
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private Button restartButton;
@@ -14,8 +16,28 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private float gameOverDelay = 5f;
 
+    public TextMeshProUGUI enemiesLeftText;
+    public TextMeshProUGUI waveCounterText;
+    public TextMeshProUGUI waveAnnouncementText;
+
+    
+
     private string targetPortalID;
     private Transform defaultSpawnPoint;
+
+
+    void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     void Start()
     {
@@ -29,6 +51,10 @@ public class GameManager : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        if(enemiesLeftText != null) enemiesLeftText.text = "";
+        if(waveCounterText != null) waveCounterText.text = "";
+        if(waveAnnouncementText != null) waveAnnouncementText.gameObject.SetActive(false);
     }
 
     private void OnEnable()
@@ -113,7 +139,7 @@ public class GameManager : MonoBehaviour
         // Try to find the portal ID
         if (!string.IsNullOrEmpty(targetPortalID))
         {
-            Portal[] portals = FindObjectsOfType<Portal>();
+            Portal[] portals = FindObjectsByType<Portal>(FindObjectsSortMode.None);
             foreach (Portal portal in portals)
             {
                 if (portal.portalID == targetPortalID)
