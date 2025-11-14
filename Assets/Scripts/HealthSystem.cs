@@ -150,7 +150,7 @@ public class HealthSystem : MonoBehaviour
         animator.SetTrigger("damage");
 
         if (playerHealthBar != null) playerHealthBar.SetHP((int)currentHealth);
-        if (currentHealth <= 0 && isDying)
+        if (currentHealth <= 0 && !isDying)
         {
             isDying = true;
             Die();
@@ -162,6 +162,7 @@ public class HealthSystem : MonoBehaviour
     {
         Instantiate(ragdoll, transform.position, transform.rotation);
         OnPlayerDied?.Invoke();
+        Debug.Log("Player Died!");
         gameObject.SetActive(false);
     }
 
