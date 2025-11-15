@@ -191,7 +191,7 @@ public class Enemy : MonoBehaviour
     {
 
         if (isDying) return;
-        
+
         if (enemyData.projectilePrefab == null) return;
 
         Vector3 aimTarget = player.transform.position + Vector3.up * 1f;
@@ -250,6 +250,8 @@ public class Enemy : MonoBehaviour
         healthBar.SetHP((int)health);
         animator.SetTrigger("damage");
         ShowHealthBar();
+
+        aggroRange = enemyData.aggroRange * 2f;
 
         if (health <= 0)
         {
