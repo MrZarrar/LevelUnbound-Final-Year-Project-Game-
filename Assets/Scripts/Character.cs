@@ -71,6 +71,9 @@ public class Character : MonoBehaviour
     public PlayerStats playerStats;
 
 
+    private float speedModifier = 1.0f;
+    private Coroutine slowCoroutine;
+
     private void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -111,14 +114,33 @@ public class Character : MonoBehaviour
 
     private void FixedUpdate()
     {
-        movementSM.currentState.PhysicsUpdate();
+        movementSM.currentState.PhysicsUpdate(speedModifier);
     }
-    
+
     public void SetMovementStats(float newSprintSpeed, float newStaminaRegen, float newStaminaDrain)
     {
         sprintSpeed = newSprintSpeed;
         staminaRegenRate = newStaminaRegen;
         staminaDrainRate = newStaminaDrain;
+    }
+    
+    public void ApplySlowdown(float duration, float slowAmount)
+    {
+        if (slowCoroutine != null)
+        {
+            StopCoroutine(slowCoroutine);
+        }
+        slowCoroutine = StartCoroutine(SlowdownRoutine(duration, slowAmount));
+    }
+
+    private IEnumerator SlowdownRoutine(float duration, float slowAmount)
+    {
+        speedModifier = 1.0f - slowAmount; 
+
+        yield return new WaitForSeconds(duration);
+
+        speedModifier = 1.0f; 
+        slowCoroutine = null;
     }
 }
  
