@@ -69,25 +69,6 @@ public class ChargingState : State
         character.animator.SetFloat("speed", input.magnitude, character.speedDampTime, Time.deltaTime);
     }
 
-    public override void PhysicsUpdate()
-    {
-        base.PhysicsUpdate();
-
-        gravityVelocity.y += gravityValue * Time.deltaTime;
-        grounded = character.controller.isGrounded;
-        if (grounded && gravityVelocity.y < 0)
-        {
-            gravityVelocity.y = 0f;
-        }
-
-        currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
-        character.controller.Move(currentVelocity * Time.deltaTime * playerSpeed + gravityVelocity * Time.deltaTime);
-
-        if (velocity.sqrMagnitude > 0)
-        {
-            character.transform.rotation = Quaternion.Slerp(character.transform.rotation, Quaternion.LookRotation(velocity), character.rotationDampTime);
-        }
-    }
 
     public override void Exit()
     {

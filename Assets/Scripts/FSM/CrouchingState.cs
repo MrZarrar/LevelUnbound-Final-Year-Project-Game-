@@ -89,9 +89,9 @@ public class CrouchingState : State
         }
     }
 
-    public override void PhysicsUpdate()
+    public override void PhysicsUpdate(float speedModifier)
     {
-        base.PhysicsUpdate();
+        base.physicsUpdate(speedModifier);
 
         // Check for ceiling before standing
         belowCeiling = Physics.Raycast(
@@ -108,7 +108,7 @@ public class CrouchingState : State
             gravityVelocity.y = 0f;
 
         currentVelocity = Vector3.Lerp(currentVelocity, velocity, character.velocityDampTime);
-        character.controller.Move(currentVelocity * Time.deltaTime * playerSpeed + gravityVelocity * Time.deltaTime);
+        character.controller.Move(currentVelocity * Time.deltaTime * speedModifier + gravityVelocity * Time.deltaTime);
 
         if (velocity.magnitude > 0)
             character.transform.rotation = Quaternion.Slerp(character.transform.rotation, Quaternion.LookRotation(velocity), character.rotationDampTime);

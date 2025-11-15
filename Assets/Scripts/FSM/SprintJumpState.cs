@@ -63,9 +63,9 @@ public class SprintJumpState : State
         }
     }
  
-    public override void PhysicsUpdate()
+    public override void PhysicsUpdate(float speedModifier)
     {
-        base.PhysicsUpdate();
+        base.physicsUpdate(speedModifier);
 
         character.playerVelocity.y += gravityValue * Time.deltaTime;
 
