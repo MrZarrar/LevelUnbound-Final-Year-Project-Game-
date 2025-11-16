@@ -43,6 +43,10 @@ public class Enemy : MonoBehaviour
     private bool hasMeleeAttack;
     private bool teleportOnCooldown = false;
 
+    private bool isRepositioning = false;
+    private Vector3 lastSeenPosition;
+    private bool hasLineOfSight = false;
+
     private Vector3 debug_LoS_Start;
     private Vector3 debug_LoS_Direction;
     private float debug_LoS_Distance;
@@ -116,10 +120,19 @@ public class Enemy : MonoBehaviour
         else
         {
             currentState = EnemyState.Patrolling;
+            isRepositioning = false;
         }
 
         if (currentState == EnemyState.Chasing)
         {
+            Debug.Log($"LOS={hasLineOfSight} dist={distanceToPlayer:F2} lastSeen={lastSeenPosition}");
+            hasLineOfSight = CheckLineOfSight();
+
+            if (hasLineOfSight)
+            {
+                lastSeenPosition = player.transform.position;
+
+            }
             agent.speed = enemyData.agentSpeed;
             HandleChasingAI(distanceToPlayer);
         }
@@ -127,7 +140,7 @@ public class Enemy : MonoBehaviour
         {
             agent.isStopped = false; // Tell agent to GO
             agent.speed = enemyData.patrolSpeed;
-            agent.stoppingDistance = 0f;
+            agent.stoppingDistance = 2f;
             HandlePatrollingAI();
         }
     }
@@ -157,12 +170,25 @@ public class Enemy : MonoBehaviour
     {
         transform.LookAt(player.transform);
 
+        // 1. REPOSITIONING LOGIC
 
-        // 1. MELEE LOGIC (Highest priority)
+        if (isRepositioning)
+        {
+            Debug.LogWarning("Repositioning...");
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            {
+                Debug.LogWarning("Repositioning Stopped");
+                isRepositioning = false;
+            }
+            return; 
+        }
+
+
+        // 2. MELEE LOGIC
         if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
         {
-            agent.isStopped = false; // Tell agent to GO
-            agent.stoppingDistance = 0; 
+            agent.isStopped = false;
+            agent.stoppingDistance = 2; 
             agent.SetDestination(player.transform.position); 
             
             if (meleeTimePassed >= meleeAttackCD)
@@ -171,53 +197,95 @@ public class Enemy : MonoBehaviour
                 meleeTimePassed = 0;
             }
         }
-        // 2. RANGED LOGIC
+        // 3. RANGED LOGIC
         else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
         {
-            // FLEE LOGIC (If no melee attack, too close)
+            bool canSeePlayer = hasLineOfSight;
+            bool canShootPlayer = hasLineOfSight;  // Shooting strictly depends on this SphereCast
+
             if (!hasMeleeAttack && distanceToPlayer < enemyData.fleeDistance)
             {
-                agent.isStopped = false; // Tell agent to GO
+                // Flee
+                agent.isStopped = false;
+                agent.stoppingDistance = 2;
                 Vector3 fleeDirection = (transform.position - player.transform.position).normalized;
-                Vector3 fleeTarget = transform.position + fleeDirection * enemyData.fleeDistance;
+                Vector3 fleeTarget = transform.position + fleeDirection * (enemyData.fleeDistance + UnityEngine.Random.Range(0f, 10f));
                 agent.SetDestination(fleeTarget);
             }
             else
             {
-                bool canSeePlayer = CheckLineOfSight();
                 if (canSeePlayer)
                 {
-                    //Good angle, stop
-                    agent.isStopped = true; // Tell agent to STOP
-                    
+                    // If mage sees the player but cannot shoot (blocked by wall) => reposition
+                    if (!canShootPlayer)
+                    {
+                        Debug.LogWarning("Mage sees player but cannot shoot — repositioning...");
+                        StartRepositioning();
+                        return;
+                    }
+
+                    // If it can shoot, then fire
+                    agent.isStopped = true;
+                    agent.stoppingDistance = enemyData.stoppingDistance;
+
                     if (rangedTimePassed >= rangedAttackCD)
                     {
-                        animator.SetTrigger("rangedAttack"); 
+                        animator.SetTrigger("rangedAttack");
                         rangedTimePassed = 0;
                     }
                 }
                 else
                 {
-                    // Get a better angle
-                    agent.isStopped = false; // Tell agent to GO
-                    agent.stoppingDistance = 0; 
-                    agent.SetDestination(player.transform.position);
+                    Debug.LogWarning("Mage CANNOT see player — repositioning...");
+                    StartRepositioning();
                 }
             }
         }
-        // 3. CHASE LOGIC (Too far for any attack)
+        // 4. CHASE LOGIC (Too far to attack)
         else
         {
-            agent.isStopped = false; // Tell agent to GO
-            
+            agent.isStopped = false; 
             if (!hasMeleeAttack && hasRangedAttack)
             {
                 agent.stoppingDistance = enemyData.stoppingDistance;
             }
             else 
             {
-                agent.stoppingDistance = 0;
+                agent.stoppingDistance = 2;
             }
+            agent.SetDestination(player.transform.position);
+        }
+    }
+    
+    private void StartRepositioning()
+    {
+        Debug.LogWarning("Repositioning to find line of sight...");
+        isRepositioning = true;
+        agent.isStopped = false;
+        agent.stoppingDistance = 2;
+
+        // Primary: move to last seen position
+        if (lastSeenPosition != Vector3.zero)
+        {
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(lastSeenPosition, out hit, 2f, NavMesh.AllAreas))
+            {
+                agent.SetDestination(hit.position);
+                return;
+            }
+        }
+
+        // Fallback: strafe around
+        Vector3 strafeDirection = (UnityEngine.Random.value > 0.5f) ? transform.right : -transform.right;
+        Vector3 randomPoint = transform.position + (strafeDirection * UnityEngine.Random.Range(5f, 10f));
+
+        NavMeshHit fallbackHit;
+        if (NavMesh.SamplePosition(randomPoint, out fallbackHit, 10f, NavMesh.AllAreas))
+        {
+            agent.SetDestination(fallbackHit.position);
+        }
+        else
+        {
             agent.SetDestination(player.transform.position);
         }
     }
@@ -230,23 +298,22 @@ public class Enemy : MonoBehaviour
         }
 
         Vector3 startPoint = projectileSpawnPoint.position;
-        Vector3 targetPoint = player.transform.position + Vector3.up * 1f; 
+        Vector3 targetPoint = player.transform.position + Vector3.up * 1f;
         Vector3 direction = (targetPoint - startPoint).normalized;
         float distance = Vector3.Distance(startPoint, targetPoint);
         float projectileRadius = enemyData.projectileRadius;
+        
 
         DebugDrawLineOfSight(startPoint, direction, distance, projectileRadius);
 
-        
+
         if (Physics.SphereCast(startPoint, projectileRadius, direction, out RaycastHit hit, distance, lineOfSightMask))
         {
-            Debug.DrawLine(startPoint, hit.point, Color.red, 0.1f); 
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(hit.point, projectileRadius);
-            return false; 
+            Debug.DrawLine(startPoint, hit.point, Color.red, 0.1f);
+            return false;
         }
 
-        return true; 
+        return true;
     }
 
     private void DebugDrawLineOfSight(Vector3 start, Vector3 direction, float distance, float radius)
