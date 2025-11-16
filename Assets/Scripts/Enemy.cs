@@ -168,7 +168,7 @@ public class Enemy : MonoBehaviour
             
             if (meleeTimePassed >= meleeAttackCD)
             {
-                animator.SetTrigger("meleeAttack"); 
+                animator.SetTrigger("attack"); 
                 meleeTimePassed = 0;
             }
         }
