@@ -280,10 +280,45 @@ public class Enemy : MonoBehaviour
 
         aggroRange = enemyData.aggroRange * 2f;
 
+        if (enemyData.specialAbility == SpecialAbility.TeleportOnHit && !teleportOnCooldown)
+        {
+            StartCoroutine(TeleportRoutine());
+        }
+
         if (health <= 0)
         {
             Die();
         }
+    }
+
+    private IEnumerator TeleportRoutine()
+    {
+        teleportOnCooldown = true;
+        
+        if (enemyData.teleportOutVFX != null)
+        {
+            Instantiate(enemyData.teleportOutVFX, transform.position, transform.rotation);
+        }
+        
+        Vector3 randomDirection = UnityEngine.Random.insideUnitSphere * patrolRadius;
+        randomDirection += transform.position;
+        NavMeshHit hit;
+        Vector3 newPosition = transform.position; 
+        
+        if (NavMesh.SamplePosition(randomDirection, out hit, patrolRadius, 1))
+        {
+            newPosition = hit.position;
+        }
+
+        agent.Warp(newPosition);
+        
+        if (enemyData.teleportInVFX != null)
+        {
+            Instantiate(enemyData.teleportInVFX, newPosition, Quaternion.identity);
+        }
+        
+        yield return new WaitForSeconds(enemyData.teleportCooldown);
+        teleportOnCooldown = false;
     }
 
     private void ShowHealthBar()
