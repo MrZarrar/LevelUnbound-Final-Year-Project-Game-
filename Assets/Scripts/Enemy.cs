@@ -129,7 +129,6 @@ public class Enemy : MonoBehaviour
 
         if (currentState == EnemyState.Chasing)
         {
-            Debug.Log($"LOS={hasLineOfSight} dist={distanceToPlayer:F2} lastSeen={lastSeenPosition}");
             hasLineOfSight = CheckLineOfSight();
 
             if (hasLineOfSight)
@@ -216,27 +215,12 @@ public class Enemy : MonoBehaviour
             {
                 if (canSeePlayer)
                 {
-                    if (!canShootPlayer)
-                    {
-                        // Reposition if can see but cannot shoot
-                        StartRepositioning();
-                        return;
-                    }
 
                     // Maintain a preferred distance instead of rushing
                     float preferredDistance = Mathf.Clamp(rangedAttackRange * 0.8f, 2f, rangedAttackRange);
                     if (distanceToPlayer < preferredDistance)
                     {
-                        // Move back to maintain distance
-                        Vector3 retreatDirection = (transform.position - player.transform.position).normalized;
-                        Vector3 retreatTarget = transform.position + retreatDirection * (preferredDistance - distanceToPlayer);
-                        NavMeshHit hit;
-                        if (NavMesh.SamplePosition(retreatTarget, out hit, 2f, NavMesh.AllAreas))
-                        {
-                            agent.isStopped = false;
-                            agent.stoppingDistance = enemyData.stoppingDistance;
-                            agent.SetDestination(hit.position);
-                        }
+                        MaintainDistance(distanceToPlayer, preferredDistance);
                     }
                     else
                     {
@@ -251,10 +235,14 @@ public class Enemy : MonoBehaviour
                         animator.SetTrigger("rangedAttack");
                         rangedTimePassed = 0;
                     }
+                    else
+                    {
+                        MaintainDistance(distanceToPlayer, preferredDistance);
+                    }
                 }
                 else
                 {
-                    // Can't see player
+                    Debug.Log("Lost line of sight, repositioning...");
                     StartRepositioning();
                 }
             }
@@ -267,6 +255,21 @@ public class Enemy : MonoBehaviour
             agent.SetDestination(player.transform.position);
         }
     }
+
+    private void MaintainDistance(float distanceToPlayer, float preferredDistance)
+    {
+        Debug.LogWarning("Maintaining distance from player...");   
+        Vector3 retreatDirection = (transform.position - player.transform.position).normalized;
+        Vector3 retreatTarget = transform.position + retreatDirection * (preferredDistance - distanceToPlayer);
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(retreatTarget, out hit, 2f, NavMesh.AllAreas))
+        {
+            agent.isStopped = false;
+            agent.stoppingDistance = enemyData.stoppingDistance;
+            agent.SetDestination(hit.position);
+        }
+
+    }
     
     private void StartRepositioning()
     {
@@ -275,18 +278,6 @@ public class Enemy : MonoBehaviour
         agent.isStopped = false;
         agent.stoppingDistance = 2;
 
-        // Primary: move to last seen position
-        if (lastSeenPosition != Vector3.zero)
-        {
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(lastSeenPosition, out hit, 2f, NavMesh.AllAreas))
-            {
-                agent.SetDestination(hit.position);
-                return;
-            }
-        }
-
-        // Fallback: strafe around
         Vector3 strafeDirection = (UnityEngine.Random.value > 0.5f) ? transform.right : -transform.right;
         Vector3 randomPoint = transform.position + (strafeDirection * UnityEngine.Random.Range(5f, 10f));
 
@@ -294,6 +285,15 @@ public class Enemy : MonoBehaviour
         if (NavMesh.SamplePosition(randomPoint, out fallbackHit, 10f, NavMesh.AllAreas))
         {
             agent.SetDestination(fallbackHit.position);
+        }
+        else if (lastSeenPosition != Vector3.zero)
+        {
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(lastSeenPosition, out hit, 2f, NavMesh.AllAreas))
+            {
+                agent.SetDestination(hit.position);
+                return;
+            }
         }
         else
         {
@@ -503,7 +503,7 @@ public class Enemy : MonoBehaviour
         {
             Gizmos.color = Color.cyan;
             Vector3 currentDrawPoint = debug_LoS_Start;
-            float step = 0.5f;
+            float step = 1.5f;
             for (float d = 0; d < debug_LoS_Distance; d += step)
             {
                 currentDrawPoint = debug_LoS_Start + debug_LoS_Direction * d;
