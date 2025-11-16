@@ -17,6 +17,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private EnemyDamageDealer leftHandDealer;
     [SerializeField] private EnemyDamageDealer rightHandDealer;
     [SerializeField] private Transform projectileSpawnPoint;
+    [SerializeField] private LayerMask lineOfSightMask;
 
     private enum EnemyState { Patrolling, Chasing }
     private EnemyState currentState;
@@ -186,16 +187,22 @@ public class Enemy : MonoBehaviour
             // If we are in range (and not fleeing), stop and shoot
             else
             {
-                agent.stoppingDistance = enemyData.stoppingDistance;
-                agent.SetDestination(transform.position); // Stop moving
+                bool canSeePlayer = true;
+                if (canSeePlayer)
+                {
+                    agent.stoppingDistance = enemyData.stoppingDistance;
+                    agent.SetDestination(transform.position); // Stop moving
+                    
+                    // Fire projectile
+                    if (rangedTimePassed >= rangedAttackCD)
+                    {
+                        animator.SetTrigger("rangedAttack"); 
+                        rangedTimePassed = 0;
+                    }
+                }
+                
             }
 
-            // Fire projectile
-            if (rangedTimePassed >= rangedAttackCD)
-            {
-                animator.SetTrigger("rangedAttack"); 
-                rangedTimePassed = 0;
-            }
         }
         // 3. CHASE LOGIC (Too far to attack)
         else
@@ -211,6 +218,29 @@ public class Enemy : MonoBehaviour
             }
             agent.SetDestination(player.transform.position);
         }
+    }
+
+    private bool CheckLineOfSight()
+    {
+        if (player == null || projectileSpawnPoint == null)
+        {
+            return false;
+        }
+
+        Vector3 startPoint = projectileSpawnPoint.position;
+        Vector3 targetPoint = player.transform.position + Vector3.up * 1f; // Aim for center mass
+        Vector3 direction = (targetPoint - startPoint).normalized;
+        float distance = Vector3.Distance(startPoint, targetPoint);
+        
+
+        
+        if (Physics.SphereCast(startPoint, enemyData.projectileRadius, direction, out RaycastHit hit, distance, lineOfSightMask))
+        {
+            return false; // Blocked by a wall, stairs, carpet, etc.
+        }
+
+        // If the cast completes without hitting anything, we have a clear shot.
+        return true; 
     }
 
 

@@ -36,12 +36,13 @@ public class EnemyData : ScriptableObject
     public float rangedAttackRange = 15f; // Max range for ranged attack
     public float rangedAttackCD = 5f;
     public float rangedWeaponDamage = 10f; 
+    public float projectileRadius = 0.5f;
     
     [Header("AI & Abilities")]
     public float fleeDistance = 10f;
     
     public SpecialAbility specialAbility = SpecialAbility.None;
-    
+
     
     [Header("Poison (for Zombie)")]
     public float poisonDuration = 3f;
