@@ -45,6 +45,10 @@ public class Enemy : MonoBehaviour
 
     private bool isDying = false;
 
+    private bool hasMeleeAttack;
+    
+    private bool teleportOnCooldown = false;
+
 
     void Start()
     {
@@ -62,6 +66,7 @@ public class Enemy : MonoBehaviour
 
         health = enemyData.health;
 
+        hasMeleeAttack = enemyData.hasMeleeAttack;
         meleeAttackCD = enemyData.meleeAttackCD;
         meleeAttackRange = enemyData.meleeAttackRange;
         meleeWeaponDamage = enemyData.meleeWeaponDamage;
@@ -78,10 +83,9 @@ public class Enemy : MonoBehaviour
         XPDrop = enemyData.XPDrop;
 
         EnemyDamageDealer[] allDealers = GetComponentsInChildren<EnemyDamageDealer>();
-
         foreach (EnemyDamageDealer dealer in allDealers)
         {
-            dealer.SetDamage(enemyData.meleeWeaponDamage);
+            dealer.Setup(enemyData); // Pass all data
         }
 
 
@@ -126,7 +130,7 @@ public class Enemy : MonoBehaviour
         else
         {
             agent.speed = enemyData.patrolSpeed;
-            agent.stoppingDistance = 0f;
+            agent.stoppingDistance = 2f;
             HandlePatrollingAI();
         }
     }
@@ -156,32 +160,55 @@ public class Enemy : MonoBehaviour
     {
         transform.LookAt(player.transform);
 
-
-        //  Check for Melee Attack (Highest Priority)
-        if (distanceToPlayer <= meleeAttackRange)
+        // 1. MELEE LOGIC
+        if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
         {
-            agent.SetDestination(player.transform.position); // Keep pushing
-
+            agent.stoppingDistance = 2;
+            agent.SetDestination(player.transform.position); 
+            
             if (meleeTimePassed >= meleeAttackCD)
             {
-                animator.SetTrigger("attack");
+                animator.SetTrigger("meleeAttack"); 
                 meleeTimePassed = 0;
             }
         }
-        // Check for Ranged Attack
+        // 2. RANGED LOGIC
         else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
         {
-            agent.SetDestination(player.transform.position);
+            // If no melee, run
+            if (!hasMeleeAttack && distanceToPlayer < enemyData.fleeDistance)
+            {
+                // Flee: Get direction away from player
+                Vector3 fleeDirection = (transform.position - player.transform.position).normalized;
+                Vector3 fleeTarget = transform.position + fleeDirection * enemyData.fleeDistance;
+                agent.SetDestination(fleeTarget);
+            }
+            // If we are in range (and not fleeing), stop and shoot
+            else
+            {
+                agent.stoppingDistance = enemyData.stoppingDistance;
+                agent.SetDestination(transform.position); // Stop moving
+            }
 
+            // Fire projectile
             if (rangedTimePassed >= rangedAttackCD)
             {
-                animator.SetTrigger("rangedAttack");
+                animator.SetTrigger("rangedAttack"); 
                 rangedTimePassed = 0;
             }
         }
-        // else just chase
+        // 3. CHASE LOGIC (Too far to attack)
         else
         {
+            // If we are a mage, our "chase" is to get to rangedAttackRange
+            if (!hasMeleeAttack && hasRangedAttack)
+            {
+                agent.stoppingDistance = enemyData.stoppingDistance;
+            }
+            else // We are melee, get in close
+            {
+                agent.stoppingDistance = 2;
+            }
             agent.SetDestination(player.transform.position);
         }
     }
