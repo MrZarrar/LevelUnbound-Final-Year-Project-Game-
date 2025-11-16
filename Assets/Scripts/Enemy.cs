@@ -121,11 +121,11 @@ public class Enemy : MonoBehaviour
         if (currentState == EnemyState.Chasing)
         {
             agent.speed = enemyData.agentSpeed;
-            agent.stoppingDistance = enemyData.stoppingDistance;
             HandleChasingAI(distanceToPlayer);
         }
         else
         {
+            agent.isStopped = false; // Tell agent to GO
             agent.speed = enemyData.patrolSpeed;
             agent.stoppingDistance = 0f;
             HandlePatrollingAI();
@@ -157,9 +157,12 @@ public class Enemy : MonoBehaviour
     {
         transform.LookAt(player.transform);
 
+
+        // 1. MELEE LOGIC (Highest priority)
         if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
         {
-            agent.stoppingDistance = 0;
+            agent.isStopped = false; // Tell agent to GO
+            agent.stoppingDistance = 0; 
             agent.SetDestination(player.transform.position); 
             
             if (meleeTimePassed >= meleeAttackCD)
@@ -168,10 +171,13 @@ public class Enemy : MonoBehaviour
                 meleeTimePassed = 0;
             }
         }
+        // 2. RANGED LOGIC
         else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
         {
+            // FLEE LOGIC (If no melee attack, too close)
             if (!hasMeleeAttack && distanceToPlayer < enemyData.fleeDistance)
             {
+                agent.isStopped = false; // Tell agent to GO
                 Vector3 fleeDirection = (transform.position - player.transform.position).normalized;
                 Vector3 fleeTarget = transform.position + fleeDirection * enemyData.fleeDistance;
                 agent.SetDestination(fleeTarget);
@@ -181,8 +187,8 @@ public class Enemy : MonoBehaviour
                 bool canSeePlayer = CheckLineOfSight();
                 if (canSeePlayer)
                 {
-                    agent.stoppingDistance = enemyData.stoppingDistance;
-                    agent.SetDestination(transform.position); 
+                    //Good angle, stop
+                    agent.isStopped = true; // Tell agent to STOP
                     
                     if (rangedTimePassed >= rangedAttackCD)
                     {
@@ -192,13 +198,18 @@ public class Enemy : MonoBehaviour
                 }
                 else
                 {
+                    // Get a better angle
+                    agent.isStopped = false; // Tell agent to GO
                     agent.stoppingDistance = 0; 
                     agent.SetDestination(player.transform.position);
                 }
             }
         }
+        // 3. CHASE LOGIC (Too far for any attack)
         else
         {
+            agent.isStopped = false; // Tell agent to GO
+            
             if (!hasMeleeAttack && hasRangedAttack)
             {
                 agent.stoppingDistance = enemyData.stoppingDistance;
