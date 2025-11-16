@@ -53,6 +53,10 @@ public class Enemy : MonoBehaviour
     private float debug_LoS_Radius;
     private bool debug_LoS_Active = false;
 
+    private float strafeTimer = 0f;
+    private float strafeChangeInterval = 2f;
+    private int strafeDirection = 1;
+
 
     void Start()
     {
@@ -171,18 +175,14 @@ public class Enemy : MonoBehaviour
         transform.LookAt(player.transform);
 
         // 1. REPOSITIONING LOGIC
-
         if (isRepositioning)
         {
-            Debug.LogWarning("Repositioning...");
             if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
             {
-                Debug.LogWarning("Repositioning Stopped");
                 isRepositioning = false;
             }
             return; 
         }
-
 
         // 2. MELEE LOGIC
         if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
@@ -201,33 +201,51 @@ public class Enemy : MonoBehaviour
         else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
         {
             bool canSeePlayer = hasLineOfSight;
-            bool canShootPlayer = hasLineOfSight;  // Shooting strictly depends on this SphereCast
+            bool canShootPlayer = hasLineOfSight;  // depends on spherecast
 
             if (!hasMeleeAttack && distanceToPlayer < enemyData.fleeDistance)
             {
-                // Flee
-                agent.isStopped = false;
-                agent.stoppingDistance = 2;
+                // Flee if too close
                 Vector3 fleeDirection = (transform.position - player.transform.position).normalized;
                 Vector3 fleeTarget = transform.position + fleeDirection * (enemyData.fleeDistance + UnityEngine.Random.Range(0f, 10f));
+                agent.isStopped = false;
+                agent.stoppingDistance = 2;
                 agent.SetDestination(fleeTarget);
             }
             else
             {
                 if (canSeePlayer)
                 {
-                    // If mage sees the player but cannot shoot (blocked by wall) => reposition
                     if (!canShootPlayer)
                     {
-                        Debug.LogWarning("Mage sees player but cannot shoot — repositioning...");
+                        // Reposition if can see but cannot shoot
                         StartRepositioning();
                         return;
                     }
 
-                    // If it can shoot, then fire
-                    agent.isStopped = true;
-                    agent.stoppingDistance = enemyData.stoppingDistance;
+                    // Maintain a preferred distance instead of rushing
+                    float preferredDistance = Mathf.Clamp(rangedAttackRange * 0.8f, 2f, rangedAttackRange);
+                    if (distanceToPlayer < preferredDistance)
+                    {
+                        // Move back to maintain distance
+                        Vector3 retreatDirection = (transform.position - player.transform.position).normalized;
+                        Vector3 retreatTarget = transform.position + retreatDirection * (preferredDistance - distanceToPlayer);
+                        NavMeshHit hit;
+                        if (NavMesh.SamplePosition(retreatTarget, out hit, 2f, NavMesh.AllAreas))
+                        {
+                            agent.isStopped = false;
+                            agent.stoppingDistance = enemyData.stoppingDistance;
+                            agent.SetDestination(hit.position);
+                        }
+                    }
+                    else
+                    {
+                        // Stop to attack if at preferred distance
+                        agent.isStopped = true;
+                        agent.stoppingDistance = enemyData.stoppingDistance;
+                    }
 
+                    // Fire if cooldown allows
                     if (rangedTimePassed >= rangedAttackCD)
                     {
                         animator.SetTrigger("rangedAttack");
@@ -236,7 +254,7 @@ public class Enemy : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("Mage CANNOT see player — repositioning...");
+                    // Can't see player
                     StartRepositioning();
                 }
             }
@@ -245,14 +263,7 @@ public class Enemy : MonoBehaviour
         else
         {
             agent.isStopped = false; 
-            if (!hasMeleeAttack && hasRangedAttack)
-            {
-                agent.stoppingDistance = enemyData.stoppingDistance;
-            }
-            else 
-            {
-                agent.stoppingDistance = 2;
-            }
+            agent.stoppingDistance = (!hasMeleeAttack && hasRangedAttack) ? enemyData.stoppingDistance : 2;
             agent.SetDestination(player.transform.position);
         }
     }
@@ -550,3 +561,6 @@ public class Enemy : MonoBehaviour
         return 0.0f; 
     }
 }
+
+
+
