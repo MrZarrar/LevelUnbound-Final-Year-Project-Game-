@@ -9,9 +9,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private EnemyData enemyData;
 
     [SerializeField] GameObject hitVFX;
-
     [SerializeField] GameObject ragdoll;
-
     [SerializeField] HealthBar healthBar;
 
     [SerializeField] private EnemyDamageDealer leftHandDealer;
@@ -24,12 +22,10 @@ public class Enemy : MonoBehaviour
 
     [SerializeField] private float patrolRadius = 20f;
 
-
     private int XPDrop;
     private float meleeAttackCD, meleeAttackRange, meleeWeaponDamage;
     private float rangedAttackCD, rangedAttackRange, rangedWeaponDamage;
     private bool hasRangedAttack;
-
     private float meleeTimePassed;
     private float rangedTimePassed;
     private int playerLayer;
@@ -42,13 +38,16 @@ public class Enemy : MonoBehaviour
     GameObject player;
     NavMeshAgent agent;
     Animator animator;
-    float timePassed;
 
     private bool isDying = false;
-
     private bool hasMeleeAttack;
-    
     private bool teleportOnCooldown = false;
+
+    private Vector3 debug_LoS_Start;
+    private Vector3 debug_LoS_Direction;
+    private float debug_LoS_Distance;
+    private float debug_LoS_Radius;
+    private bool debug_LoS_Active = false;
 
 
     void Start()
@@ -86,7 +85,7 @@ public class Enemy : MonoBehaviour
         EnemyDamageDealer[] allDealers = GetComponentsInChildren<EnemyDamageDealer>();
         foreach (EnemyDamageDealer dealer in allDealers)
         {
-            dealer.Setup(enemyData); // Pass all data
+            dealer.Setup(enemyData);
         }
 
 
@@ -94,17 +93,14 @@ public class Enemy : MonoBehaviour
 
         currentState = EnemyState.Patrolling;
         agent.speed = enemyData.patrolSpeed;
-        SetNewPatrolPoint(); // Get the first random point to walk to
+        SetNewPatrolPoint(); 
 
     }
 
     void Update()
     {
-
         if (isDying) return;
 
-        animator.SetFloat("speed", agent.velocity.magnitude / agent.speed);
-        if (player == null) return;
         animator.SetFloat("speed", agent.velocity.magnitude / agent.speed);
         if (player == null) return;
 
@@ -131,7 +127,7 @@ public class Enemy : MonoBehaviour
         else
         {
             agent.speed = enemyData.patrolSpeed;
-            agent.stoppingDistance = 2f;
+            agent.stoppingDistance = 0f;
             HandlePatrollingAI();
         }
     }
@@ -161,10 +157,9 @@ public class Enemy : MonoBehaviour
     {
         transform.LookAt(player.transform);
 
-        // 1. MELEE LOGIC
         if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
         {
-            agent.stoppingDistance = 2;
+            agent.stoppingDistance = 0;
             agent.SetDestination(player.transform.position); 
             
             if (meleeTimePassed >= meleeAttackCD)
@@ -173,48 +168,44 @@ public class Enemy : MonoBehaviour
                 meleeTimePassed = 0;
             }
         }
-        // 2. RANGED LOGIC
         else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
         {
-            // If no melee, run
             if (!hasMeleeAttack && distanceToPlayer < enemyData.fleeDistance)
             {
-                // Flee: Get direction away from player
                 Vector3 fleeDirection = (transform.position - player.transform.position).normalized;
                 Vector3 fleeTarget = transform.position + fleeDirection * enemyData.fleeDistance;
                 agent.SetDestination(fleeTarget);
             }
-            // If we are in range (and not fleeing), stop and shoot
             else
             {
-                bool canSeePlayer = true;
+                bool canSeePlayer = CheckLineOfSight();
                 if (canSeePlayer)
                 {
                     agent.stoppingDistance = enemyData.stoppingDistance;
-                    agent.SetDestination(transform.position); // Stop moving
+                    agent.SetDestination(transform.position); 
                     
-                    // Fire projectile
                     if (rangedTimePassed >= rangedAttackCD)
                     {
                         animator.SetTrigger("rangedAttack"); 
                         rangedTimePassed = 0;
                     }
                 }
-                
+                else
+                {
+                    agent.stoppingDistance = 0; 
+                    agent.SetDestination(player.transform.position);
+                }
             }
-
         }
-        // 3. CHASE LOGIC (Too far to attack)
         else
         {
-            // If we are a mage, our "chase" is to get to rangedAttackRange
             if (!hasMeleeAttack && hasRangedAttack)
             {
                 agent.stoppingDistance = enemyData.stoppingDistance;
             }
-            else // We are melee, get in close
+            else 
             {
-                agent.stoppingDistance = 2;
+                agent.stoppingDistance = 0;
             }
             agent.SetDestination(player.transform.position);
         }
@@ -222,31 +213,43 @@ public class Enemy : MonoBehaviour
 
     private bool CheckLineOfSight()
     {
-        if (player == null || projectileSpawnPoint == null)
+        if (player == null || projectileSpawnPoint == null || enemyData == null)
         {
             return false;
         }
 
         Vector3 startPoint = projectileSpawnPoint.position;
-        Vector3 targetPoint = player.transform.position + Vector3.up * 1f; // Aim for center mass
+        Vector3 targetPoint = player.transform.position + Vector3.up * 1f; 
         Vector3 direction = (targetPoint - startPoint).normalized;
         float distance = Vector3.Distance(startPoint, targetPoint);
-        
+        float projectileRadius = enemyData.projectileRadius;
+
+        DebugDrawLineOfSight(startPoint, direction, distance, projectileRadius);
 
         
-        if (Physics.SphereCast(startPoint, enemyData.projectileRadius, direction, out RaycastHit hit, distance, lineOfSightMask))
+        if (Physics.SphereCast(startPoint, projectileRadius, direction, out RaycastHit hit, distance, lineOfSightMask))
         {
-            return false; // Blocked by a wall, stairs, carpet, etc.
+            Debug.DrawLine(startPoint, hit.point, Color.red, 0.1f); 
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(hit.point, projectileRadius);
+            return false; 
         }
 
-        // If the cast completes without hitting anything, we have a clear shot.
         return true; 
+    }
+
+    private void DebugDrawLineOfSight(Vector3 start, Vector3 direction, float distance, float radius)
+    {
+        debug_LoS_Start = start;
+        debug_LoS_Direction = direction;
+        debug_LoS_Distance = distance;
+        debug_LoS_Radius = radius;
+        debug_LoS_Active = true;
     }
 
 
     public void SpawnProjectile()
     {
-
         if (isDying) return;
 
         if (enemyData.projectilePrefab == null) return;
@@ -406,6 +409,22 @@ public class Enemy : MonoBehaviour
             Gizmos.color = Color.purple;
             Gizmos.DrawWireSphere(transform.position, enemyData.rangedAttackRange);
         }
+
+        if (debug_LoS_Active)
+        {
+            Gizmos.color = Color.cyan;
+            Vector3 currentDrawPoint = debug_LoS_Start;
+            float step = 0.5f;
+            for (float d = 0; d < debug_LoS_Distance; d += step)
+            {
+                currentDrawPoint = debug_LoS_Start + debug_LoS_Direction * d;
+                Gizmos.DrawWireSphere(currentDrawPoint, debug_LoS_Radius);
+            }
+            Gizmos.DrawWireSphere(debug_LoS_Start + debug_LoS_Direction * debug_LoS_Distance, debug_LoS_Radius);
+            Gizmos.DrawLine(debug_LoS_Start, debug_LoS_Start + debug_LoS_Direction * debug_LoS_Distance);
+
+            debug_LoS_Active = false; 
+        }
     }
 
 
@@ -437,7 +456,7 @@ public class Enemy : MonoBehaviour
     {
         if (string.IsNullOrEmpty(enemyData.deathAnimationName))
         {
-            return 0.0f; // No name = 0 second wait
+            return 0.0f; 
         }
 
         AnimationClip[] clips = animator.runtimeAnimatorController.animationClips;
@@ -450,8 +469,6 @@ public class Enemy : MonoBehaviour
         }
         
         Debug.LogWarning("Enemy '" + gameObject.name + "' specified death animation '" + enemyData.deathAnimationName + "' but it was not found in the Animator.");
-        return 0.0f; // Return 0 so the game doesn't stall
+        return 0.0f; 
     }
-
-} 
-
+}
