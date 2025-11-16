@@ -63,7 +63,7 @@ public class LandingState:State
 
     public override void PhysicsUpdate(float speedModifier)
     {
-        base.physicsUpdate(speedModifier);
+        base.PhysicsUpdate(speedModifier);
 
         gravityVelocity.y += gravityValue * Time.deltaTime;
         if (character.controller.isGrounded && gravityVelocity.y < 0)

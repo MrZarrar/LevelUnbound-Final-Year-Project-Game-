@@ -49,7 +49,7 @@ public class JumpingState:State
  
     public override void PhysicsUpdate(float speedModifier)
     {
-        base.physicsUpdate(speedModifier);
+        base.PhysicsUpdate(speedModifier);
         if (!grounded)
         {
  

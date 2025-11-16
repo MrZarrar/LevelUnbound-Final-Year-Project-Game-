@@ -81,7 +81,7 @@ public class SprintState : State
 
     public override void PhysicsUpdate(float speedModifier)
     {
-        base.physicsUpdate(speedModifier);
+        base.PhysicsUpdate(speedModifier);
         gravityVelocity.y += gravityValue * Time.deltaTime;
         grounded = character.controller.isGrounded;
         if (grounded && gravityVelocity.y < 0)

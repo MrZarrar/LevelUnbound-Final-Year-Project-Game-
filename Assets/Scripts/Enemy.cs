@@ -32,7 +32,7 @@ public class Enemy : MonoBehaviour
     private float meleeTimePassed;
     private float rangedTimePassed;
     private int playerLayer;
-    private Collider ownCollider;
+    private Collider[] allColliders;
     private float aggroRange;
     private float health;
 
@@ -57,7 +57,7 @@ public class Enemy : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player");
 
         playerLayer = LayerMask.NameToLayer("Player");
-        ownCollider = GetComponent<Collider>();
+        allColliders = GetComponentsInChildren<Collider>();
 
         if (enemyData.spawnVFX != null)
         {
@@ -236,7 +236,7 @@ public class Enemy : MonoBehaviour
         Projectiles projectileScript = blast.GetComponent<Projectiles>();
         if (projectileScript != null)
         {
-            projectileScript.Setup(damage, playerLayer, ownCollider);
+            projectileScript.Setup(damage, playerLayer, allColliders, 20);
         }
     }
 

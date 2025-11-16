@@ -91,7 +91,7 @@ public class CrouchingState : State
 
     public override void PhysicsUpdate(float speedModifier)
     {
-        base.physicsUpdate(speedModifier);
+        base.PhysicsUpdate(speedModifier);
 
         // Check for ceiling before standing
         belowCeiling = Physics.Raycast(
