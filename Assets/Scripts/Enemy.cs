@@ -173,7 +173,7 @@ public class Enemy : MonoBehaviour
     {
         transform.LookAt(player.transform);
 
-        // 1. REPOSITIONING LOGIC
+        // --- 1. REPOSITIONING ---
         if (isRepositioning)
         {
             if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
@@ -183,75 +183,72 @@ public class Enemy : MonoBehaviour
             return; 
         }
 
-        // 2. MELEE LOGIC
+        // --- 2. MELEE ATTACK (Highest Priority) ---
         if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
         {
             agent.isStopped = false;
-            agent.stoppingDistance = 2; 
+            agent.stoppingDistance = 0.1f; 
             agent.SetDestination(player.transform.position); 
             
             if (meleeTimePassed >= meleeAttackCD)
             {
-                animator.SetTrigger("attack"); 
+                animator.SetTrigger("meleeAttack"); 
                 meleeTimePassed = 0;
             }
         }
-        // 3. RANGED LOGIC
-        else if (hasRangedAttack && distanceToPlayer <= rangedAttackRange)
+        // --- 3. RANGED LOGIC (Flee, Attack, Wait, Reposition, Chase) ---
+        else if (hasRangedAttack)
         {
-            bool canSeePlayer = hasLineOfSight;
-            bool canShootPlayer = hasLineOfSight;  // depends on spherecast
-
+            // A) FLEE (If no melee and player is too close)
             if (!hasMeleeAttack && distanceToPlayer < enemyData.fleeDistance)
             {
-                // Flee if too close
-                Vector3 fleeDirection = (transform.position - player.transform.position).normalized;
-                Vector3 fleeTarget = transform.position + fleeDirection * (enemyData.fleeDistance + UnityEngine.Random.Range(0f, 10f));
                 agent.isStopped = false;
-                agent.stoppingDistance = 2;
+                agent.stoppingDistance = 0.1f; 
+                Vector3 fleeDirection = (transform.position - player.transform.position).normalized;
+                Vector3 fleeTarget = transform.position + fleeDirection * enemyData.fleeDistance;
                 agent.SetDestination(fleeTarget);
             }
-            else
+            // B) IN RANGE
+            else if (distanceToPlayer <= rangedAttackRange)
             {
-                if (canSeePlayer)
+                if (hasLineOfSight)
                 {
-
-                    // Maintain a preferred distance instead of rushing
-                    float preferredDistance = Mathf.Clamp(rangedAttackRange * 0.8f, 2f, rangedAttackRange);
-                    if (distanceToPlayer < preferredDistance)
-                    {
-                        MaintainDistance(distanceToPlayer, preferredDistance);
-                    }
-                    else
-                    {
-                        // Stop to attack if at preferred distance
-                        agent.isStopped = true;
-                        agent.stoppingDistance = enemyData.stoppingDistance;
-                    }
-
-                    // Fire if cooldown allows
+                    // Decide if we should shoot or move
+                    
                     if (rangedTimePassed >= rangedAttackCD)
                     {
+                        // COOLDOWN IS READY: STOP AND SHOOT 
+                        agent.isStopped = true; 
+                        agent.stoppingDistance = enemyData.stoppingDistance;
+
                         animator.SetTrigger("rangedAttack");
                         rangedTimePassed = 0;
                     }
                     else
                     {
-                        MaintainDistance(distanceToPlayer, preferredDistance);
+                        // COOLDOWN IS ACTIVE: MAINTAIN DISTANCE 
+
+                        MaintainDistance(distanceToPlayer, enemyData.stoppingDistance);
                     }
                 }
                 else
                 {
-                    Debug.Log("Lost line of sight, repositioning...");
                     StartRepositioning();
                 }
             }
+            // C) CHASE (Too far to attack)
+            else
+            {
+                agent.isStopped = false; 
+                agent.stoppingDistance = enemyData.stoppingDistance; 
+                agent.SetDestination(player.transform.position);
+            }
         }
-        // 4. CHASE LOGIC (Too far to attack)
-        else
+        // 4. MELEE-ONLY CHASE 
+        else if (hasMeleeAttack)
         {
             agent.isStopped = false; 
-            agent.stoppingDistance = (!hasMeleeAttack && hasRangedAttack) ? enemyData.stoppingDistance : 2;
+            agent.stoppingDistance = 0.1f;
             agent.SetDestination(player.transform.position);
         }
     }
