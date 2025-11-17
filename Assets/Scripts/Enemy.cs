@@ -24,7 +24,7 @@ public class Enemy : MonoBehaviour
 
     private int XPDrop;
     private float meleeAttackCD, meleeAttackRange, meleeWeaponDamage;
-    private float rangedAttackCD, rangedAttackRange, rangedWeaponDamage;
+    private float rangedAttackCD, rangedAttackRange, rangedWeaponDamage, projectileSpeed;
     private bool hasRangedAttack;
     private float meleeTimePassed;
     private float rangedTimePassed;
@@ -84,6 +84,7 @@ public class Enemy : MonoBehaviour
         rangedAttackCD = enemyData.rangedAttackCD;
         rangedAttackRange = enemyData.rangedAttackRange;
         rangedWeaponDamage = enemyData.rangedWeaponDamage;
+        projectileSpeed = enemyData.projectileSpeed;
 
 
         aggroRange = enemyData.aggroRange;
@@ -173,7 +174,7 @@ public class Enemy : MonoBehaviour
     {
         transform.LookAt(player.transform);
 
-        // --- 1. REPOSITIONING ---
+        // 1. REPOSITIONING 
         if (isRepositioning)
         {
             if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
@@ -183,7 +184,7 @@ public class Enemy : MonoBehaviour
             return; 
         }
 
-        // --- 2. MELEE ATTACK (Highest Priority) ---
+        // 2. MELEE ATTACK
         if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
         {
             agent.isStopped = false;
@@ -196,7 +197,7 @@ public class Enemy : MonoBehaviour
                 meleeTimePassed = 0;
             }
         }
-        // --- 3. RANGED LOGIC (Flee, Attack, Wait, Reposition, Chase) ---
+        // 3. RANGED LOGIC 
         else if (hasRangedAttack)
         {
             // A) FLEE (If no melee and player is too close)
@@ -351,11 +352,12 @@ public class Enemy : MonoBehaviour
         );
 
         float damage = rangedWeaponDamage;
+        float speed = projectileSpeed;
 
         Projectiles projectileScript = blast.GetComponent<Projectiles>();
         if (projectileScript != null)
         {
-            projectileScript.Setup(damage, playerLayer, allColliders, 20);
+            projectileScript.Setup(damage, playerLayer, allColliders, speed);
         }
     }
 
