@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-public enum SpecialAbility { None, Poison, TeleportOnHit }
+public enum SpecialAbility { None, Poison, TeleportOnHit, FlashStep, DashStep }
 
 [CreateAssetMenu(fileName = "EnemyData", menuName = "Enemy Data")]
 public class EnemyData : ScriptableObject
@@ -42,7 +42,24 @@ public class EnemyData : ScriptableObject
     [Header("AI & Abilities")]
     public float fleeDistance = 10f;
     
+    [Header("AI & Abilities")]
+    public float fleeDistance = 10f;
+    
+    [Tooltip("The special ability this enemy uses.")]
     public SpecialAbility specialAbility = SpecialAbility.None;
+
+    [Tooltip("General cooldown for the special ability (Dash, Flash, etc.)")]
+    public float specialAbilityCooldown = 8f;
+    
+    [Tooltip("The 'sweet spot' distance to be in to use a special move (like a Dash)")]
+    public float specialAbilityRange = 10f;
+    
+    [Tooltip("For Mages: Teleport only when health is below this")]
+    public float healthThreshold = 0.25f;
+
+    [Tooltip("For Vampires: How close to the player to flash step")]
+    public float flashStepRadius = 3f;
+
 
     
     [Header("Poison (for Zombie)")]
