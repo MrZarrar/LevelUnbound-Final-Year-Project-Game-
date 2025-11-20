@@ -151,6 +151,9 @@
 ---
 
 ### 📅 12/11/25 
-- 
+- Added a customized player character and replaced the dummy character i previously had
+- added a game over canvas that darkens the screen and contains a try again button to respawn the user
+- Issue: screen would pop up instantly as the player health would reach 0, added a delay to wait for a few seconds, to let the ragdoll drop
+
 
 ---
