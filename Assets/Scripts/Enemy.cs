@@ -43,6 +43,8 @@ public class Enemy : MonoBehaviour
     private bool hasMeleeAttack;
     private bool teleportOnCooldown = false;
 
+    private float specialAbilityCooldownTimer;
+
     private bool isRepositioning = false;
     private Vector3 lastSeenPosition;
     private bool hasLineOfSight = false;
@@ -100,6 +102,8 @@ public class Enemy : MonoBehaviour
 
         healthBar.SetMaxHP((int)health);
 
+        specialAbilityCooldownTimer = enemyData.specialAbilityCooldown;
+
         currentState = EnemyState.Patrolling;
         agent.speed = enemyData.patrolSpeed;
         SetNewPatrolPoint(); 
@@ -115,6 +119,7 @@ public class Enemy : MonoBehaviour
 
         meleeTimePassed += Time.deltaTime;
         rangedTimePassed += Time.deltaTime;
+        specialAbilityCooldownTimer += Time.deltaTime;
 
         float distanceToPlayer = Vector3.Distance(player.transform.position, transform.position);
 
