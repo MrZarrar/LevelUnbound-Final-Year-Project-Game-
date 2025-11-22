@@ -45,6 +45,9 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private Transform projectileSpawnPoint;
     [SerializeField] private float manaCost = 10f;
 
+    [SerializeField] private float baseProjectileSpeed = 20f;
+    [SerializeField] private float agiProjectileSpeedBonus = 0.2f;
+
     [SerializeField] private RectTransform reticleRectTransform;
 
     [SerializeField] private LayerMask aimLayerMask;
@@ -71,7 +74,7 @@ public class PlayerStats : MonoBehaviour
     public Stat vitality;
 
     private int enemyLayer;
-
+    private Collider[] allPlayerColliders;  
 
     public void SaveStats(GameManager gm)
     {
@@ -114,6 +117,8 @@ public class PlayerStats : MonoBehaviour
 
         animator = GetComponent<Animator>();
         character = GetComponent<Character>();
+
+        allPlayerColliders = GetComponentsInChildren<Collider>();
 
 
         UpdateAllStats();
@@ -266,13 +271,15 @@ public class PlayerStats : MonoBehaviour
         float baseSpellDamage = 5f;
         float intelligenceMultiplier = 1.0f + (intelligence.GetValue() * 0.1f);
 
+        float totalProjectileSpeed = baseProjectileSpeed + (agility.GetValue() * agiProjectileSpeedBonus);
+
         float damage = baseSpellDamage * intelligenceMultiplier;
 
         Projectiles projectileScript = blast.GetComponent<Projectiles>();
         if (projectileScript != null)
         {
 
-            projectileScript.Setup(damage, enemyLayer, GetComponent<CharacterController>());
+            projectileScript.Setup(damage, enemyLayer, allPlayerColliders, totalProjectileSpeed);
         }
     }
 }

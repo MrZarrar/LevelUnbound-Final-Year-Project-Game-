@@ -88,9 +88,9 @@ public class AttackState : State
         }
     }
 
-    public override void PhysicsUpdate()
+    public override void PhysicsUpdate(float speedModifier)
     {
-        base.PhysicsUpdate();
+        base.PhysicsUpdate(speedModifier);
 
         gravityVelocity.y += gravityValue * Time.deltaTime;
         grounded = character.controller.isGrounded;
@@ -102,7 +102,7 @@ public class AttackState : State
 
         currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
         
-        character.controller.Move(currentVelocity * Time.deltaTime * playerSpeed + gravityVelocity * Time.deltaTime);
+        character.controller.Move(currentVelocity * Time.deltaTime * playerSpeed * speedModifier + gravityVelocity * Time.deltaTime);
 
         if (velocity.sqrMagnitude > 0)
         {

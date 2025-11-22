@@ -6,59 +6,56 @@ public class EnemyDamageDealer : MonoBehaviour
 {
     private float weaponDamage = 1f;
     private Collider hitboxCollider;
-
-  
     private List<Collider> collidersAlreadyHit = new List<Collider>();
+
+    private EnemyData enemyData; 
 
     void Start()
     {
-        // Get the collider on this object
         hitboxCollider = GetComponent<Collider>();
-        
         hitboxCollider.isTrigger = true;
-        
         hitboxCollider.enabled = false;
+    }
+
+    public void Setup(EnemyData data)
+    {
+        this.enemyData = data;
+        this.weaponDamage = data.meleeWeaponDamage;
     }
 
     public void StartDealDamage()
     {
         collidersAlreadyHit.Clear();
-        
         hitboxCollider.enabled = true;
     }
 
     public void EndDealDamage()
     {
-      
         hitboxCollider.enabled = false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !collidersAlreadyHit.Contains(other))
         {
-            // Check if alrdy hit player
-            if (collidersAlreadyHit.Contains(other))
-            {
-                return; 
-            }
-
             collidersAlreadyHit.Add(other);
 
             if (other.TryGetComponent(out HealthSystem health))
             {
-                // Find the closest point on the player's collider for the VFX
                 Vector3 hitPoint = other.ClosestPoint(transform.position);
 
                 health.TakeDamage(weaponDamage);
                 health.HitVFX(hitPoint);
                 Debug.Log($"Enemy dealt {weaponDamage} damage to {other.name}");
+
+                if (enemyData != null && enemyData.specialAbility == SpecialAbility.Poison)
+                {
+                    if (other.TryGetComponent(out Character character))
+                    {
+                        character.ApplySlowdown(enemyData.poisonDuration, enemyData.poisonSlowAmount);
+                    }
+                }
             }
         }
-    }
-
-    public void SetDamage(float damage)
-    {
-        weaponDamage = damage;
     }
 }

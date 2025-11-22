@@ -79,9 +79,9 @@ public class SprintState : State
         }
     }
 
-    public override void PhysicsUpdate()
+    public override void PhysicsUpdate(float speedModifier)
     {
-        base.PhysicsUpdate();
+        base.PhysicsUpdate(speedModifier);
         gravityVelocity.y += gravityValue * Time.deltaTime;
         grounded = character.controller.isGrounded;
         if (grounded && gravityVelocity.y < 0)
@@ -96,7 +96,7 @@ public class SprintState : State
         velocity *= character.sprintSpeed;
 
         currentVelocity = Vector3.SmoothDamp(currentVelocity, velocity, ref cVelocity, character.velocityDampTime);
-        character.controller.Move(currentVelocity * Time.deltaTime + gravityVelocity * Time.deltaTime);
+        character.controller.Move(currentVelocity * speedModifier * Time.deltaTime + gravityVelocity * Time.deltaTime);
 
 
         if (velocity.sqrMagnitude > 0)

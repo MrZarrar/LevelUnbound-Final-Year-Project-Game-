@@ -119,3 +119,41 @@
 - Set Healthbar as unactive in Unity and created a method in enemy class that shows health bar (sets it to active) - this is called after the enemy takes damage for the first time - Only show relevant health bars opposed to bars for all enemies - if there are 100 enemies it would clutter the UI
 
 
+### 📅 04/11/25
+- Added A Player HUD canvas with a player health bar and Mana bar
+- Reused the enemy health bar object, enlarged it and placed it on the top left with mana bar underneath
+- Linked Health bar to Healthsystem script to update the values and slider every time health changes(up or down)
+
+---
+
+
+### 📅 05/11/25 
+- Added Basic Stats System to initalise levels with Agility, Strength, Intelligence and Vitality values
+- Linked Mana bar to the intelligence stat
+- Added a Stamina bar and XP Bar with level
+- Added a levelling up animation and enemies now drop a set xp (set in enemy data when creating enemy types)
+- Stamina drain pauses when sprint jumping, and Does not regen whilst attacking - need to fix
+- Leveling up increases all stats at once and also refills mana and health for siphon - short term incentive to level up. Will change the stats increase to a stats menu where leveling up gives points which can be allocated to different stats, allows for a more personalized experience and playstyle.
+
+---
+
+
+### 📅 06/11/25 - 11/11/25 
+- Added a Wave Spawner that is set up using Scriptable Wave objects that I made, allows for custom waves to be added to every level easily - scalable
+- Revamped enemies to use the same approach where there is one enemy script linked to an enemy data script. The enemy data is also a scriptable object, allowing many different types of enemies to be created very easily rather than coding each new enemy.
+- Enemy data defines each enemies stats like health, speed, aggro distance, attack distance, damage, and how much xp they drop
+- Added Zombies, move slow but attack using both hands - doing twice the damage in the same time 
+- Switched back to colliders for damage dealing since raycasting was not scalable to add different weapons as it only worked best with long swords, not hands.
+- Error: the collider would not move during zombie attack - because i attached it to the hand's mesh and not the hand bone, which is what moves during animation.
+- Error: Inconsistent damage being done by player, this was because the base weapon damage is set when the sword is unsheathed and is updated when the strength stat increases(upon levelling up), this meant if i unequipped and re equipped the sowrd, the boost from strength stat would be overridden by the base weapon damage, and then re applied after levelling up
+- Issues with vfx not being destroyed and causing clutter, added an automatic vfx destroyer that is attached to each vfx and calculated the individual duration for each vfx to destroy it after it plays exactly once
+
+---
+
+### 📅 12/11/25 
+- Added a customized player character and replaced the dummy character i previously had
+- added a game over canvas that darkens the screen and contains a try again button to respawn the user
+- Issue: screen would pop up instantly as the player health would reach 0, added a delay to wait for a few seconds, to let the ragdoll drop
+
+
+---
