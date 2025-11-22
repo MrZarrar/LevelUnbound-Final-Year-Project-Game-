@@ -38,9 +38,7 @@ public class EnemyData : ScriptableObject
     public float rangedWeaponDamage = 10f; 
     public float projectileRadius = 0.5f;
     public float projectileSpeed = 10f;
-    
-    [Header("AI & Abilities")]
-    public float fleeDistance = 10f;
+
     
     [Header("AI & Abilities")]
     public float fleeDistance = 10f;
