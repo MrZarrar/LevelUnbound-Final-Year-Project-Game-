@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+
 
 [System.Serializable]
 public class Stat
@@ -79,6 +81,7 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private TextMeshProUGUI agiText;
     [SerializeField] private TextMeshProUGUI intText;
     [SerializeField] private TextMeshProUGUI vitText;
+    [SerializeField] private TextMeshProUGUI levelText;
 
     public int unspentPoints = 0;
     private int enemyLayer;
@@ -160,7 +163,7 @@ public class PlayerStats : MonoBehaviour
         currentXP -= xpToNextLevel;
         xpToNextLevel = (int)(xpToNextLevel * 1.2f);
 
-        unspentPoints += 4;
+        unspentPoints += 1;
 
 
         UpdateAllStats();
@@ -176,11 +179,12 @@ public class PlayerStats : MonoBehaviour
     {
         if (unspentPointsText == null) return;
 
-        unspentPointsText.text = $"Points: {unspentPoints}";
-        strText.text = $"Strength: {strength.GetValue()}";
-        agiText.text = $"Agility: {agility.GetValue()}";
-        intText.text = $"Intelligence: {intelligence.GetValue()}";
-        vitText.text = $"Vitality: {vitality.GetValue()}";
+        unspentPointsText.text = $"{unspentPoints}";
+        strText.text = $"{strength.GetValue()}";
+        agiText.text = $"{agility.GetValue()}";
+        intText.text = $"{intelligence.GetValue()}";
+        vitText.text = $"{vitality.GetValue()}";
+        levelText.text = $"{level}";
     }
 
     public void IncreaseStrength() { IncreaseStat(strength); }
@@ -190,12 +194,19 @@ public class PlayerStats : MonoBehaviour
 
     private void IncreaseStat(Stat statToIncrease)
     {
+        Debug.Log($"[STATS DEBUG] Attempting to increase {statToIncrease.name}. Points available: {unspentPoints}");
+
         if (unspentPoints > 0)
         {
+            Debug.Log($"[STATS] Increasing {statToIncrease.name}. New Value: {statToIncrease.GetValue() + 1}");
             unspentPoints--;
             statToIncrease.baseValue++;
             UpdateAllStats(); 
             UpdateStatUI();   
+        }
+        else
+        {
+            Debug.LogWarning("[STATS DEBUG] Cannot spend point: Unspent points is 0.");
         }
     }
 
