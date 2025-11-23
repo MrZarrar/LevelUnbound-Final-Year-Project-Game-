@@ -73,6 +73,14 @@ public class PlayerStats : MonoBehaviour
     public Stat intelligence;
     public Stat vitality;
 
+    [Header("Stats UI")]
+    [SerializeField] private TextMeshProUGUI unspentPointsText;
+    [SerializeField] private TextMeshProUGUI strText;
+    [SerializeField] private TextMeshProUGUI agiText;
+    [SerializeField] private TextMeshProUGUI intText;
+    [SerializeField] private TextMeshProUGUI vitText;
+
+    public int unspentPoints = 0;
     private int enemyLayer;
     private Collider[] allPlayerColliders;  
 
@@ -152,18 +160,42 @@ public class PlayerStats : MonoBehaviour
         currentXP -= xpToNextLevel;
         xpToNextLevel = (int)(xpToNextLevel * 1.2f);
 
-        // Increase stats
-        strength.baseValue++;
-        agility.baseValue++;
-        intelligence.baseValue++;
-        vitality.baseValue++;
+        unspentPoints += 4;
 
 
         UpdateAllStats();
+        UpdateStatUI();
 
         if (xpBar != null)
         {
             xpBar.SetLevel(level, currentXP, xpToNextLevel);
+        }
+    }
+
+    public void UpdateStatUI()
+    {
+        if (unspentPointsText == null) return;
+
+        unspentPointsText.text = $"Points: {unspentPoints}";
+        strText.text = $"Strength: {strength.GetValue()}";
+        agiText.text = $"Agility: {agility.GetValue()}";
+        intText.text = $"Intelligence: {intelligence.GetValue()}";
+        vitText.text = $"Vitality: {vitality.GetValue()}";
+    }
+
+    public void IncreaseStrength() { IncreaseStat(strength); }
+    public void IncreaseAgility() { IncreaseStat(agility); }
+    public void IncreaseIntelligence() { IncreaseStat(intelligence); }
+    public void IncreaseVitality() { IncreaseStat(vitality); }
+
+    private void IncreaseStat(Stat statToIncrease)
+    {
+        if (unspentPoints > 0)
+        {
+            unspentPoints--;
+            statToIncrease.baseValue++;
+            UpdateAllStats(); 
+            UpdateStatUI();   
         }
     }
 
