@@ -38,21 +38,43 @@ public class HealthSystem : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    public void InitializeVitals(float newMaxHealth, float newMaxMana, float newMaxStamina)
+    public void InitializeVitals(float newMaxHealth, float newMaxMana, float newMaxStamina, bool refillVitals = true)
     {
         maxHealth = newMaxHealth;
         maxMana = newMaxMana;
         maxStamina = newMaxStamina;
 
-        // Heal to full
-        currentHealth = maxHealth;
-        currentMana = maxMana;
-        currentStamina = maxStamina;
+        // Heal to full only if requested (e.g., on level up)
+        if (refillVitals)
+        {
+            currentHealth = maxHealth;
+            currentMana = maxMana;
+            currentStamina = maxStamina;
+        }
+        else
+        {
+            // Clamp current values to new max values without refilling
+            currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+            currentMana = Mathf.Clamp(currentMana, 0, maxMana);
+            currentStamina = Mathf.Clamp(currentStamina, 0, maxStamina);
+        }
 
-        // Update UI
-        if (playerHealthBar != null) playerHealthBar.SetMaxHP((int)maxHealth);
-        if (playerManaBar != null) playerManaBar.SetMaxMana((int)maxMana);
-        if (playerStaminaBar != null) playerStaminaBar.SetMaxStamina(maxStamina);
+        // Update UI - always update current values to reflect clamped values
+        if (playerHealthBar != null) 
+        {
+            playerHealthBar.SetMaxHP((int)maxHealth);
+            playerHealthBar.SetHP((int)currentHealth);
+        }
+        if (playerManaBar != null) 
+        {
+            playerManaBar.SetMaxMana((int)maxMana);
+            playerManaBar.SetMana((int)currentMana);
+        }
+        if (playerStaminaBar != null) 
+        {
+            playerStaminaBar.SetMaxStamina(maxStamina);
+            playerStaminaBar.SetStamina(currentStamina);
+        }
     }
 
     public bool TryUseStamina(float amount)

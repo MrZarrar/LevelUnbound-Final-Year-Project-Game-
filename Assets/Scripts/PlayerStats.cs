@@ -82,6 +82,7 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private TextMeshProUGUI intText;
     [SerializeField] private TextMeshProUGUI vitText;
     [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI statsKeybindText;
 
     public int unspentPoints = 0;
     private int enemyLayer;
@@ -112,7 +113,7 @@ public class PlayerStats : MonoBehaviour
         this.intelligence.baseValue = data.intelligence;
         this.vitality.baseValue = data.vitality;
         
-        UpdateAllStats(); 
+        UpdateAllStats(refillVitals: true); // Start with full vitals when loading
         
         if (xpBar != null)
         {
@@ -132,7 +133,7 @@ public class PlayerStats : MonoBehaviour
         allPlayerColliders = GetComponentsInChildren<Collider>();
 
 
-        UpdateAllStats();
+        UpdateAllStats(refillVitals: true); // Start with full vitals
 
         if (xpBar != null)
         {
@@ -166,7 +167,7 @@ public class PlayerStats : MonoBehaviour
         unspentPoints += 1;
 
 
-        UpdateAllStats();
+        UpdateAllStats(refillVitals: true); // Refill health and mana on level up
         UpdateStatUI();
 
         if (xpBar != null)
@@ -185,6 +186,12 @@ public class PlayerStats : MonoBehaviour
         intText.text = $"{intelligence.GetValue()}";
         vitText.text = $"{vitality.GetValue()}";
         levelText.text = $"{level}";
+
+        // Update StatsKeybind color based on unspent points
+        if (statsKeybindText != null)
+        {
+            statsKeybindText.color = unspentPoints > 0 ? Color.green : Color.white;
+        }
     }
 
     public void IncreaseStrength() { IncreaseStat(strength); }
@@ -201,7 +208,7 @@ public class PlayerStats : MonoBehaviour
             Debug.Log($"[STATS] Increasing {statToIncrease.name}. New Value: {statToIncrease.GetValue() + 1}");
             unspentPoints--;
             statToIncrease.baseValue++;
-            UpdateAllStats(); 
+            UpdateAllStats(refillVitals: false); // Don't refill health/mana when increasing stats
             UpdateStatUI();   
         }
         else
@@ -210,9 +217,9 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
-    private void UpdateAllStats()
+    private void UpdateAllStats(bool refillVitals = false)
     {
-        UpdateVitals();
+        UpdateVitals(refillVitals);
         UpdateWeaponStats();
         UpdateMovementStats();
     }
@@ -234,7 +241,7 @@ public class PlayerStats : MonoBehaviour
     }
 
 
-    private void UpdateVitals()
+    private void UpdateVitals(bool refillVitals = false)
     {
         float newMaxHealth = vitality.GetValue() * 15;
         float newMaxMana = intelligence.GetValue() * 10;
@@ -242,7 +249,7 @@ public class PlayerStats : MonoBehaviour
 
         if (healthSystem != null)
         {
-            healthSystem.InitializeVitals(newMaxHealth, newMaxMana, newMaxStamina);
+            healthSystem.InitializeVitals(newMaxHealth, newMaxMana, newMaxStamina, refillVitals);
         }
     }
 
