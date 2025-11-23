@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,18 +19,20 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI dungeonTitleText;
     [SerializeField] private float dungeonIntroDuration = 3f;
+    [SerializeField] private GameObject statsPanel;
 
     public TextMeshProUGUI enemiesLeftText;
     public TextMeshProUGUI waveCounterText;
     public TextMeshProUGUI waveAnnouncementText;
-
-    
-
     private Portal.SpawnTargetType spawnType;
     private string targetPortalID;
     private string targetSpawnPointID;
 
     private PlayerStatData savedStats;
+
+    private bool isStatsMenuOpen = false;
+    private PlayerInput playerInput;
+
 
 
     void Awake()
@@ -63,6 +66,39 @@ public class GameManager : MonoBehaviour
         if (waveAnnouncementText != null) waveAnnouncementText.gameObject.SetActive(false);
         
         if(dungeonTitleText != null) dungeonTitleText.gameObject.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (playerInput == null && PlayerPersistence.instance != null)
+        {
+            playerInput = PlayerPersistence.instance.GetComponent<PlayerInput>();
+        }
+
+        if (playerInput != null && playerInput.actions["ToggleStats"].triggered)
+        {
+            ToggleStatsMenu();
+        }
+    }
+
+
+    public void ToggleStatsMenu()
+    {
+        isStatsMenuOpen = !isStatsMenuOpen;
+
+        if (statsPanel != null)
+        {
+            statsPanel.SetActive(isStatsMenuOpen);
+            
+            // Update the text whenever we open the menu
+            if (isStatsMenuOpen && PlayerPersistence.instance != null)
+            {
+                PlayerPersistence.instance.GetComponent<PlayerStats>().UpdateStatUI();
+            }
+        }
+
+        Cursor.visible = isStatsMenuOpen;
+        Cursor.lockState = isStatsMenuOpen ? CursorLockMode.None : CursorLockMode.Locked;
     }
 
     private void OnEnable()

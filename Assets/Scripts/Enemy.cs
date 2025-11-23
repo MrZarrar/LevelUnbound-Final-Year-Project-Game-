@@ -193,12 +193,11 @@ public class Enemy : MonoBehaviour
         if (hasMeleeAttack && distanceToPlayer <= meleeAttackRange)
         {
             agent.isStopped = false;
-            agent.stoppingDistance = 0.1f; 
             agent.SetDestination(player.transform.position); 
             
             if (meleeTimePassed >= meleeAttackCD)
             {
-                animator.SetTrigger("meleeAttack"); 
+                animator.SetTrigger("attack"); 
                 meleeTimePassed = 0;
             }
         }
@@ -254,7 +253,6 @@ public class Enemy : MonoBehaviour
         else if (hasMeleeAttack)
         {
             agent.isStopped = false; 
-            agent.stoppingDistance = 0.1f;
             agent.SetDestination(player.transform.position);
         }
     }
