@@ -35,4 +35,16 @@ public class StatTests
 
         Assert.AreEqual(6, result, "Increasing baseValue should immediately change GetValue.");
     }
+
+    [Test]
+    public void Stat_AllowsNegativeValues_ForDebuffs()
+    {
+        var agilityStat = new Stat
+        {
+            name = "Agility",
+            baseValue = -3
+        };
+
+        Assert.AreEqual(-3, agilityStat.GetValue(), "Stats should be able to represent negative modifiers.");
+    }
 }

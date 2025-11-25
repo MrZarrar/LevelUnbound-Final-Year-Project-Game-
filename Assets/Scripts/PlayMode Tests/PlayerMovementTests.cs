@@ -14,4 +14,20 @@ public class PlayerMovementTests
         Assert.IsNotNull(player);
         Object.Destroy(player);
     }
+
+    [UnityTest]
+    public IEnumerator Player_PositionChangesAfterManualTranslation()
+    {
+        GameObject player = new GameObject("MoverPlayer");
+        var controller = player.AddComponent<CharacterController>();
+
+        Vector3 initialPosition = player.transform.position;
+        player.transform.Translate(Vector3.forward * 2f);
+
+        yield return null;
+
+        Assert.Greater(player.transform.position.z, initialPosition.z, "Player should move forward after translation.");
+
+        Object.Destroy(player);
+    }
 }
